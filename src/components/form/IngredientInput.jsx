@@ -1,7 +1,11 @@
-// File: src/components/IngredientInput.jsx
-import React from 'react';
+import React from "react";
 
-const IngredientInput = ({ ingredient, index, handleIngredientChange, removeIngredient }) => (
+const IngredientInput = ({
+  ingredient,
+  index,
+  handleIngredientChange,
+  removeIngredient,
+}) => (
   <div className="flex items-center space-x-2 mb-2">
     <input
       type="text"

@@ -1,4 +1,3 @@
-// File: src/components/IngredientList.jsx
 import React from "react";
 import IngredientInput from "./IngredientInput";
 

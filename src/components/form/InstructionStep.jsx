@@ -1,4 +1,3 @@
-// File: src/components/InstructionStep.jsx
 import React from "react";
 
 const InstructionStep = ({
