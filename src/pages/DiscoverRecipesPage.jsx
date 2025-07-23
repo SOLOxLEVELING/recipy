@@ -4,7 +4,7 @@ import { mockRecipes } from "../data/mockData";
 import RecipeCardGrid from "../components/recipes/RecipeCardGrid";
 import AdvancedFilterModal from "../components/recipes/AdvancedFilterModal";
 
-const DiscoverRecipesPage = () => {
+const DiscoverRecipesPage = ({ onSelectRecipe }) => {
   const [searchQuery, setSearchQuery] = useState("");
   const [activeFilters, setActiveFilters] = useState({});
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -70,6 +70,18 @@ const DiscoverRecipesPage = () => {
         </div>
       </div>
       <RecipeCardGrid recipes={filteredRecipes} />
+      <AdvancedFilterModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        activeFilters={activeFilters}
+        setActiveFilters={setActiveFilters}
+      />
+
+      <RecipeCardGrid
+        recipes={filteredRecipes}
+        onSelectRecipe={onSelectRecipe}
+      />
+
       <AdvancedFilterModal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
