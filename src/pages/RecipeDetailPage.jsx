@@ -1,12 +1,13 @@
 import React, { useState, useEffect, useRef, useMemo } from "react";
-import { ArrowLeft, Sun, Moon } from "lucide-react";
+// 👇 CORRECTED LINE: Add 'Users' to this import
+import { ArrowLeft, Sun, Moon, Users } from "lucide-react";
 import IngredientChecklist from "../components/recipes/IngredientChecklist";
 import InstructionList from "../components/recipes/InstructionList";
 import RatingStars from "../components/reviews/RatingStars";
 import CommentThread from "../components/reviews/CommentThread";
 
 const RecipeDetailPage = ({ recipe, onBack }) => {
-  // Guard clause: If there's no recipe, exit early. This is the most important check.
+  // Guard clause: If there's no recipe, exit early.
   if (!recipe) {
     return (
       <p className="text-center text-gray-500">
@@ -15,14 +16,39 @@ const RecipeDetailPage = ({ recipe, onBack }) => {
     );
   }
 
+  // --- START: SCALING LOGIC ---
+  const [desiredServings, setDesiredServings] = useState(recipe.servings);
+
+  const scaledIngredients = useMemo(() => {
+    if (
+      !recipe.servings ||
+      !desiredServings ||
+      desiredServings <= 0 ||
+      desiredServings === recipe.servings
+    ) {
+      return recipe.ingredients;
+    }
+
+    const scalingFactor = desiredServings / recipe.servings;
+
+    return recipe.ingredients.map((ingredient) => {
+      const match = ingredient.match(/(\d*\.?\d+)/);
+      if (match) {
+        const quantity = parseFloat(match[0]);
+        const scaledQuantity = quantity * scalingFactor;
+        const formattedQuantity = Number(scaledQuantity.toFixed(2));
+        return ingredient.replace(match[0], formattedQuantity);
+      }
+      return ingredient;
+    });
+  }, [recipe.ingredients, recipe.servings, desiredServings]);
+  // --- END: SCALING LOGIC ---
+
   const [isCookMode, setIsCookMode] = useState(false);
   const wakeLockRef = useRef(null);
-
-  // State is now initialized safely with the recipe's data
   const [ratings, setRatings] = useState(recipe.ratings || []);
   const [comments, setComments] = useState(recipe.comments || []);
 
-  // This effect ensures the component updates if a different recipe is selected without a full page reload
   useEffect(() => {
     setRatings(recipe.ratings || []);
     setComments(recipe.comments || []);
@@ -51,7 +77,6 @@ const RecipeDetailPage = ({ recipe, onBack }) => {
   };
 
   useEffect(() => {
-    // ... (wake lock logic remains the same)
     const acquireWakeLock = async () => {
       if ("wakeLock" in navigator) {
         try {
@@ -114,7 +139,26 @@ const RecipeDetailPage = ({ recipe, onBack }) => {
 
       <main className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <div className="lg:col-span-1">
-          <IngredientChecklist ingredients={recipe.ingredients} />
+          <div className="bg-gray-50 p-4 rounded-lg mb-8">
+            <label
+              htmlFor="servings"
+              className="flex items-center text-lg font-bold text-gray-800 mb-2"
+            >
+              <Users className="mr-2" size={24} />
+              Servings
+            </label>
+            <input
+              type="number"
+              id="servings"
+              min="1"
+              value={desiredServings}
+              onChange={(e) => setDesiredServings(Number(e.target.value))}
+              className="w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-green-500 focus:border-green-500"
+            />
+          </div>
+
+          <IngredientChecklist ingredients={scaledIngredients} />
+
           <div className="mt-8 bg-gray-50 p-4 rounded-lg">
             <h4 className="font-bold text-lg mb-2">Rate this recipe!</h4>
             <RatingStars onRate={handleAddRating} />
