@@ -5,6 +5,7 @@ import IngredientChecklist from "../components/recipes/IngredientChecklist";
 import InstructionList from "../components/recipes/InstructionList";
 import RatingStars from "../components/reviews/RatingStars";
 import CommentThread from "../components/reviews/CommentThread";
+import SaveRecipeButton from "../components/recipes/SaveRecipeButton"; // Import the button
 
 const RecipeDetailPage = ({ recipe, onBack }) => {
   // Guard clause: If there's no recipe, exit early.
@@ -123,6 +124,7 @@ const RecipeDetailPage = ({ recipe, onBack }) => {
               <span className="text-sm">({ratings.length} reviews)</span>
             </div>
           </div>
+          <SaveRecipeButton recipeId={recipe.id} /> {/* <-- Add button here */}
           <button
             onClick={() => setIsCookMode(!isCookMode)}
             className={`flex items-center gap-2 px-4 py-2 rounded-full font-semibold transition-colors ${
