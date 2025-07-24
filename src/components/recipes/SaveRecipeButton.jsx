@@ -1,11 +1,18 @@
 import React from "react";
 import { Bookmark, BookmarkCheck } from "lucide-react";
 import { useRecipeBox } from "../../context/RecipeBoxContext";
+import { useAuth } from "../../context/AuthContext"; // <-- Import useAuth
 
 const SaveRecipeButton = ({ recipe }) => {
-  // It must accept the full 'recipe' object
+  const { isAuthenticated } = useAuth(); // <-- Get user's login status
   const { isRecipeSaved, addRecipe, removeRecipe } = useRecipeBox();
-  if (!recipe || !recipe.id) return null; // Safety check
+
+  // If the user is not logged in, do not render the button
+  if (!isAuthenticated) {
+    return null;
+  }
+
+  if (!recipe || !recipe.id) return null;
 
   const isSaved = isRecipeSaved(recipe.id);
 
@@ -14,22 +21,22 @@ const SaveRecipeButton = ({ recipe }) => {
     if (isSaved) {
       removeRecipe(recipe.id);
     } else {
-      addRecipe(recipe); // Pass the full recipe object to the context
+      addRecipe(recipe);
     }
   };
 
   return (
     <button
       onClick={handleToggleSave}
-      className={`flex items-center gap-2 px-4 py-2 rounded-full font-semibold transition-colors text-sm
+      className={`flex items-center gap-2 px-3 py-2 rounded-full font-semibold transition-colors text-sm
                 ${
                   isSaved
-                    ? "bg-green-600 text-white"
+                    ? "bg-green-600 text-white hover:bg-green-700"
                     : "bg-gray-200 text-gray-700 hover:bg-gray-300"
                 }`}
     >
       {isSaved ? <BookmarkCheck size={20} /> : <Bookmark size={20} />}
-      {isSaved ? "Saved" : "Save Recipe"}
+      {isSaved ? "Saved" : "Save"}
     </button>
   );
 };

@@ -1,5 +1,4 @@
-// src/pages/RecipeDetailPage.jsx (Corrected)
-import React, { useState, useEffect, useRef, useMemo } from "react";
+import React, { useState, useEffect, useMemo, useRef } from "react";
 import { ArrowLeft, Sun, Moon, Users } from "lucide-react";
 import IngredientChecklist from "../components/recipes/IngredientChecklist";
 import InstructionList from "../components/recipes/InstructionList";
@@ -9,13 +8,14 @@ import SaveRecipeButton from "../components/recipes/SaveRecipeButton";
 import { fetchRecipeById } from "../services/api";
 
 const RecipeDetailPage = ({ recipeId, onBack }) => {
-  // Correctly accepts recipeId
   const [recipe, setRecipe] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    if (!recipeId) return;
-
+    if (!recipeId) {
+      setIsLoading(false);
+      return;
+    }
     const getRecipe = async () => {
       setIsLoading(true);
       try {
@@ -23,36 +23,63 @@ const RecipeDetailPage = ({ recipeId, onBack }) => {
         setRecipe(response.data);
       } catch (error) {
         console.error("Failed to fetch recipe:", error);
+        setRecipe(null);
       } finally {
         setIsLoading(false);
       }
     };
-
     getRecipe();
   }, [recipeId]);
 
   if (isLoading) return <p className="text-center">Loading recipe...</p>;
-  if (!recipe) return <p className="text-center">Recipe not found.</p>;
+  if (!recipe)
+    return <p className="text-center">Recipe could not be loaded.</p>;
 
-  // The rest of the component logic can now safely use the `recipe` object.
-  // We can define the other states here, now that we know `recipe` exists.
   return <RecipeDetailContent recipe={recipe} onBack={onBack} />;
 };
 
-// We move the main component logic into a sub-component to keep it clean
-// This component only renders when `recipe` is guaranteed to exist.
+// Sub-component to keep logic clean and ensure 'recipe' object exists
 const RecipeDetailContent = ({ recipe, onBack }) => {
-  const [desiredServings, setDesiredServings] = useState(recipe.servings);
+  const [desiredServings, setDesiredServings] = useState(recipe.servings || 1);
   const [isCookMode, setIsCookMode] = useState(false);
-  // ... other states like comments, ratings, etc. can be managed here.
+  const wakeLockRef = useRef(null);
+
+  // State for ratings and comments, initialized from the fetched recipe
+  const [ratings, setRatings] = useState(recipe.ratings || []);
+  const [comments, setComments] = useState(recipe.comments || []);
+
+  // Effect for Cook Mode screen wake lock
+  useEffect(() => {
+    const acquireWakeLock = async () => {
+      if ("wakeLock" in navigator) {
+        try {
+          wakeLockRef.current = await navigator.wakeLock.request("screen");
+        } catch (err) {
+          console.error(err);
+        }
+      }
+    };
+    const releaseWakeLock = async () => {
+      if (wakeLockRef.current) {
+        await wakeLockRef.current.release();
+        wakeLockRef.current = null;
+      }
+    };
+    if (isCookMode) acquireWakeLock();
+    return () => {
+      releaseWakeLock();
+    };
+  }, [isCookMode]);
+
+  const averageRating = useMemo(() => {
+    if (!ratings || ratings.length === 0) return 0;
+    const sum = ratings.reduce((acc, r) => acc + r.score, 0);
+    return sum / ratings.length;
+  }, [ratings]);
 
   const scaledIngredients = useMemo(() => {
-    if (
-      !recipe.servings ||
-      !desiredServings ||
-      desiredServings <= 0 ||
-      desiredServings === recipe.servings
-    ) {
+    if (!Array.isArray(recipe.ingredients)) return [];
+    if (!recipe.servings || !desiredServings || desiredServings <= 0) {
       return recipe.ingredients.map((ing) =>
         `${ing.quantity || ""} ${ing.unit || ""} ${ing.name}`.trim()
       );
@@ -60,17 +87,17 @@ const RecipeDetailContent = ({ recipe, onBack }) => {
     const scalingFactor = desiredServings / recipe.servings;
     return recipe.ingredients.map((ing) => {
       if (ing.quantity) {
-        const scaled = Number((ing.quantity * scalingFactor).toFixed(2));
+        const scaled = Number(
+          (parseFloat(ing.quantity) * scalingFactor).toFixed(2)
+        );
         return `${scaled} ${ing.unit || ""} ${ing.name}`.trim();
       }
       return ing.name;
     });
   }, [recipe.ingredients, recipe.servings, desiredServings]);
 
-  // ... The rest of the original JSX for the detail page goes here.
   return (
     <div className="max-w-5xl mx-auto bg-white p-4 sm:p-8 rounded-xl shadow-lg">
-      {/* Header with title, save button, etc. */}
       <header className="mb-6">
         <button
           onClick={onBack}
@@ -90,18 +117,31 @@ const RecipeDetailContent = ({ recipe, onBack }) => {
               {recipe.title}
             </h1>
             <p className="text-lg text-gray-600 mt-1">By {recipe.author}</p>
+            <div className="flex items-center mt-2 gap-2 text-gray-500">
+              <RatingStars initialRating={averageRating} />
+              <span className="text-sm">({ratings.length} reviews)</span>
+            </div>
           </div>
-          <div className="flex items-center gap-4">
-            <SaveRecipeButton recipeId={recipe.id} />
-            {/* Cook Mode Button Here */}
+          <div className="flex items-center gap-4 flex-shrink-0 mt-2">
+            {/* ✅ CORRECTED: Pass the entire recipe object to the button */}
+            <SaveRecipeButton recipe={recipe} />
+            <button
+              onClick={() => setIsCookMode(!isCookMode)}
+              className={`flex items-center gap-2 px-3 py-2 rounded-full font-semibold transition-colors text-sm ${
+                isCookMode
+                  ? "bg-yellow-400 text-gray-800"
+                  : "bg-gray-200 text-gray-700 hover:bg-gray-300"
+              }`}
+            >
+              {isCookMode ? <Moon size={20} /> : <Sun size={20} />}
+              <span>Cook Mode</span>
+            </button>
           </div>
         </div>
       </header>
 
-      {/* Main content with scaler and ingredient list */}
       <main className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <div className="lg:col-span-1">
-          {/* Servings Scaler UI */}
           <div className="bg-gray-50 p-4 rounded-lg mb-8">
             <label
               htmlFor="servings"
@@ -122,11 +162,23 @@ const RecipeDetailContent = ({ recipe, onBack }) => {
         </div>
         <div className="lg:col-span-2">
           <InstructionList
-            instructions={recipe.instructions.map((inst) => inst.description)}
+            instructions={
+              Array.isArray(recipe.instructions)
+                ? recipe.instructions.map((inst) => inst.description)
+                : []
+            }
           />
         </div>
       </main>
-      {/* ... Ratings and Comments Section ... */}
+
+      <section className="mt-10 col-span-1 lg:col-span-3">
+        <CommentThread
+          comments={comments}
+          onAddComment={(commentText) =>
+            console.log("New comment:", commentText)
+          }
+        />
+      </section>
     </div>
   );
 };

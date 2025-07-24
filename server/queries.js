@@ -99,7 +99,8 @@ const createRecipe = async (recipeData) => {
   }
 };
 
-const getSavedRecipes = async (userId = 1) => {
+// This function now requires a userId
+const getSavedRecipes = async (userId) => {
   const { rows } = await db.query(
     `SELECT r.id, r.title, r.image_url FROM recipes r JOIN saved_recipes sr ON r.id = sr.recipe_id WHERE sr.user_id = $1`,
     [userId]
@@ -107,20 +108,42 @@ const getSavedRecipes = async (userId = 1) => {
   return rows;
 };
 
-const saveRecipeToBox = async (userId = 1, recipeId) => {
+const saveRecipeToBox = async (userId, recipeId) => {
+  // This query will now ignore the insert if the recipe is already saved, preventing a crash.
   const { rows } = await db.query(
-    "INSERT INTO saved_recipes (user_id, recipe_id) VALUES ($1, $2) RETURNING *",
+    `INSERT INTO saved_recipes (user_id, recipe_id) 
+       VALUES ($1, $2) 
+       ON CONFLICT (user_id, recipe_id) DO NOTHING 
+       RETURNING *`,
     [userId, recipeId]
   );
   return rows[0];
 };
 
-const removeRecipeFromBox = async (userId = 1, recipeId) => {
+// This function now requires a userId
+const removeRecipeFromBox = async (userId, recipeId) => {
   await db.query(
     "DELETE FROM saved_recipes WHERE user_id = $1 AND recipe_id = $2",
     [userId, recipeId]
   );
   return { success: true, recipeId: recipeId };
+};
+
+// Added these new functions inside queries.js
+
+const createUser = async ({ username, email, passwordHash }) => {
+  const { rows } = await db.query(
+    "INSERT INTO users (username, email, password_hash) VALUES ($1, $2, $3) RETURNING id, username, email",
+    [username, email, passwordHash]
+  );
+  return rows[0];
+};
+
+const findUserByEmail = async (email) => {
+  const { rows } = await db.query("SELECT * FROM users WHERE email = $1", [
+    email,
+  ]);
+  return rows[0];
 };
 
 module.exports = {
@@ -130,4 +153,6 @@ module.exports = {
   getSavedRecipes,
   saveRecipeToBox,
   removeRecipeFromBox,
+  createUser,
+  findUserByEmail,
 };
