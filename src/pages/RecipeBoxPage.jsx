@@ -1,14 +1,29 @@
-import React from "react";
-import { useRecipeBox } from "../context/RecipeBoxContext";
-import { mockRecipes } from "../data/mockData";
+import React, { useState, useEffect } from "react";
+import { fetchSavedRecipes } from "../services/api"; // Use our new api function
 import RecipeCardGrid from "../components/recipes/RecipeCardGrid";
 
 const RecipeBoxPage = ({ onSelectRecipe }) => {
-  const { savedRecipeIds } = useRecipeBox();
+  const [savedRecipes, setSavedRecipes] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
 
-  const savedRecipes = mockRecipes.filter((recipe) =>
-    savedRecipeIds.includes(recipe.id)
-  );
+  useEffect(() => {
+    const getRecipes = async () => {
+      try {
+        const response = await fetchSavedRecipes();
+        setSavedRecipes(response.data);
+      } catch (error) {
+        console.error("Failed to fetch saved recipes:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    getRecipes();
+  }, []); // The empty array ensures this runs only once on page load
+
+  if (isLoading) {
+    return <p className="text-center">Loading your recipe box...</p>;
+  }
 
   return (
     <div className="max-w-6xl mx-auto">

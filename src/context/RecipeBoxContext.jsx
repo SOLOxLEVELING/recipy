@@ -1,4 +1,9 @@
 import React, { createContext, useState, useEffect, useContext } from "react";
+import axios from "axios";
+
+const api = axios.create({
+  baseURL: import.meta.env.VITE_API_BASE_URL,
+});
 
 const RecipeBoxContext = createContext();
 
@@ -7,34 +12,60 @@ export const useRecipeBox = () => {
 };
 
 export const RecipeBoxProvider = ({ children }) => {
-  const [savedRecipeIds, setSavedRecipeIds] = useState(() => {
-    try {
-      const item = window.localStorage.getItem("recipeBox");
-      return item ? JSON.parse(item) : [];
-    } catch (error) {
-      console.error(error);
-      return [];
-    }
-  });
+  const [savedRecipes, setSavedRecipes] = useState([]);
 
   useEffect(() => {
-    window.localStorage.setItem("recipeBox", JSON.stringify(savedRecipeIds));
-  }, [savedRecipeIds]);
+    const fetchSaved = async () => {
+      try {
+        const response = await api.get("/api/saved-recipes");
+        setSavedRecipes(response.data);
+      } catch (error) {
+        console.error("Could not fetch saved recipes", error);
+      }
+    };
+    fetchSaved();
+  }, []);
 
-  const addRecipe = (id) => {
-    setSavedRecipeIds((prevIds) => [...prevIds, id]);
+  const addRecipe = async (recipeToAdd) => {
+    try {
+      setSavedRecipes((prevRecipes) => [
+        ...prevRecipes,
+        {
+          id: recipeToAdd.id,
+          title: recipeToAdd.title,
+          image_url: recipeToAdd.image_url,
+        },
+      ]); // Optimistic UI update
+      await api.post("/api/saved-recipes", { recipeId: recipeToAdd.id });
+    } catch (error) {
+      console.error("Failed to save recipe", error);
+      setSavedRecipes((prevRecipes) =>
+        prevRecipes.filter((r) => r.id !== recipeToAdd.id)
+      ); // Revert on error
+    }
   };
 
-  const removeRecipe = (id) => {
-    setSavedRecipeIds((prevIds) =>
-      prevIds.filter((recipeId) => recipeId !== id)
-    );
+  const removeRecipe = async (idToRemove) => {
+    try {
+      setSavedRecipes((prevRecipes) =>
+        prevRecipes.filter((r) => r.id !== idToRemove)
+      ); // Optimistic UI update
+      await api.delete(`/api/saved-recipes/${idToRemove}`);
+    } catch (error) {
+      console.error("Failed to remove recipe", error);
+      // Revert logic would be more complex, fetching the list again is simplest
+    }
+  };
+
+  const isRecipeSaved = (id) => {
+    return savedRecipes.some((r) => r.id === id);
   };
 
   const value = {
-    savedRecipeIds,
+    savedRecipes,
     addRecipe,
     removeRecipe,
+    isRecipeSaved, // Provide the new helper function
   };
 
   return (

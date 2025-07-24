@@ -1,12 +1,12 @@
+// src/App.jsx (Corrected)
 import React, { useState } from "react";
-import { RecipeBoxProvider } from "./context/RecipeBoxContext"; // Import the provider
+import { RecipeBoxProvider } from "./context/RecipeBoxContext"; // Assuming you have this file
 import Header from "./components/layout/Header";
 import PageNavigator from "./components/layout/PageNavigator";
 import DiscoverRecipesPage from "./pages/DiscoverRecipesPage";
 import CreateRecipePage from "./pages/CreateRecipePage";
 import RecipeDetailPage from "./pages/RecipeDetailPage";
-import RecipeBoxPage from "./pages/RecipeBoxPage"; // Import the new page
-import { mockRecipes } from "./data/mockData";
+import RecipeBoxPage from "./pages/RecipeBoxPage";
 
 export default function App() {
   const [view, setView] = useState({ page: "discover", recipeId: null });
@@ -21,11 +21,13 @@ export default function App() {
       case "create":
         return <CreateRecipePage />;
       case "detail":
-        const recipe = mockRecipes.find((r) => r.id === view.recipeId);
         return (
-          <RecipeDetailPage recipe={recipe} onBack={handleBackToDiscover} />
+          <RecipeDetailPage
+            recipeId={view.recipeId}
+            onBack={handleBackToDiscover}
+          />
         );
-      case "recipeBox": // Add case for the new page
+      case "recipeBox":
         return <RecipeBoxPage onSelectRecipe={handleSelectRecipe} />;
       case "discover":
       default:
@@ -36,7 +38,7 @@ export default function App() {
   return (
     <RecipeBoxProvider>
       {" "}
-      {/* Wrap the app in the provider */}
+      {/* This wrapper is essential */}
       <div className="bg-gray-100 min-h-screen font-sans">
         <div className="container mx-auto px-4 py-8">
           <Header />

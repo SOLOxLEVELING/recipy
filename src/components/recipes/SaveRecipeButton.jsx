@@ -2,16 +2,19 @@ import React from "react";
 import { Bookmark, BookmarkCheck } from "lucide-react";
 import { useRecipeBox } from "../../context/RecipeBoxContext";
 
-const SaveRecipeButton = ({ recipeId }) => {
-  const { savedRecipeIds, addRecipe, removeRecipe } = useRecipeBox();
-  const isSaved = savedRecipeIds.includes(recipeId);
+const SaveRecipeButton = ({ recipe }) => {
+  // It must accept the full 'recipe' object
+  const { isRecipeSaved, addRecipe, removeRecipe } = useRecipeBox();
+  if (!recipe || !recipe.id) return null; // Safety check
+
+  const isSaved = isRecipeSaved(recipe.id);
 
   const handleToggleSave = (e) => {
-    e.stopPropagation(); // Prevents card click when saving from grid view
+    e.stopPropagation();
     if (isSaved) {
-      removeRecipe(recipeId);
+      removeRecipe(recipe.id);
     } else {
-      addRecipe(recipeId);
+      addRecipe(recipe); // Pass the full recipe object to the context
     }
   };
 
