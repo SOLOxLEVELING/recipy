@@ -1,19 +1,26 @@
 import React from "react";
 
-const InstructionList = ({ instructions }) => (
-  <div className="bg-blue-50 p-6 rounded-lg">
-    <h3 className="text-2xl font-bold text-gray-800 mb-4">Instructions</h3>
-    <ol className="space-y-4">
-      {instructions.map((step, index) => (
-        <li key={index} className="flex items-start">
-          <span className="flex-shrink-0 flex items-center justify-center h-8 w-8 bg-blue-600 text-white font-bold rounded-full mr-4">
-            {index + 1}
+const InstructionList = ({instructions}) => (
+    <div className="w-full">
+        <h3 className="text-3xl font-bold text-neutral-800 mb-8">Instructions</h3>
+        <ol className="space-y-8">
+            {instructions.map((step, index) => (
+                <li key={index} className="flex items-start gap-4">
+                    {/* Typographic Step Number */}
+                    <span
+                        className="text-4xl font-bold text-primary-600/50"
+                        style={{fontVariantNumeric: 'tabular-nums'}}
+                    >
+            {/* Pad with '0' for a consistent look */}
+                        {(index + 1).toString().padStart(2, '0')}
           </span>
-          <p className="text-lg text-gray-800 leading-relaxed pt-1">{step}</p>
-        </li>
-      ))}
-    </ol>
-  </div>
+                    <p className="text-lg text-neutral-700 leading-relaxed pt-2">
+                        {step}
+                    </p>
+                </li>
+            ))}
+        </ol>
+    </div>
 );
 
 export default InstructionList;

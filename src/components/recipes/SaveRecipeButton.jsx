@@ -1,44 +1,50 @@
 import React from "react";
-import { Bookmark, BookmarkCheck } from "lucide-react";
-import { useRecipeBox } from "../../context/RecipeBoxContext";
-import { useAuth } from "../../context/AuthContext"; // <-- Import useAuth
+import {Bookmark} from "lucide-react"; // Only need the one icon
+import {useRecipeBox} from "../../context/RecipeBoxContext";
+import {useAuth} from "../../context/AuthContext";
 
-const SaveRecipeButton = ({ recipe }) => {
-  const { isAuthenticated } = useAuth(); // <-- Get user's login status
-  const { isRecipeSaved, addRecipe, removeRecipe } = useRecipeBox();
+const SaveRecipeButton = ({recipe}) => {
+    const {isAuthenticated} = useAuth();
+    const {isRecipeSaved, addRecipe, removeRecipe} = useRecipeBox();
 
-  // If the user is not logged in, do not render the button
-  if (!isAuthenticated) {
-    return null;
-  }
-
-  if (!recipe || !recipe.id) return null;
-
-  const isSaved = isRecipeSaved(recipe.id);
-
-  const handleToggleSave = (e) => {
-    e.stopPropagation();
-    if (isSaved) {
-      removeRecipe(recipe.id);
-    } else {
-      addRecipe(recipe);
+    // If the user is not logged in, do not render the button
+    if (!isAuthenticated) {
+        return null;
     }
-  };
 
-  return (
-    <button
-      onClick={handleToggleSave}
-      className={`flex items-center gap-2 px-3 py-2 rounded-full font-semibold transition-colors text-sm
-                ${
-                  isSaved
-                    ? "bg-green-600 text-white hover:bg-green-700"
-                    : "bg-gray-200 text-gray-700 hover:bg-gray-300"
-                }`}
-    >
-      {isSaved ? <BookmarkCheck size={20} /> : <Bookmark size={20} />}
-      {isSaved ? "Saved" : "Save"}
-    </button>
-  );
+    if (!recipe || !recipe.id) return null;
+
+    const isSaved = isRecipeSaved(recipe.id);
+
+    const handleToggleSave = (e) => {
+        e.stopPropagation(); // Stop the click from bubbling up to the card
+        if (isSaved) {
+            removeRecipe(recipe.id);
+        } else {
+            addRecipe(recipe);
+        }
+    };
+
+    return (
+        <button
+            onClick={handleToggleSave}
+            className={`
+        flex items-center justify-center h-10 w-10 rounded-full transition-all duration-300
+        ${
+                isSaved
+                    ? "bg-primary-600 text-white" // Solid green background when saved
+                    : "bg-white/80 text-neutral-700 backdrop-blur-sm hover:bg-white" // Semi-transparent white
+            }
+      `}
+            aria-label={isSaved ? "Remove from Recipe Box" : "Save to Recipe Box"}
+        >
+            <Bookmark
+                size={20}
+                // Use 'fill' to make the icon solid when saved
+                fill={isSaved ? 'currentColor' : 'none'}
+            />
+        </button>
+    );
 };
 
 export default SaveRecipeButton;

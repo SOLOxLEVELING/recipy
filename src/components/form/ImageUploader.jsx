@@ -1,55 +1,51 @@
 import React from "react";
+import {Image, UploadCloud} from "lucide-react";
 
-const ImageUploader = ({ imagePreview, handleImageChange }) => (
-  <div>
-    <label className="block text-sm font-medium text-gray-700 mb-1">
-      Recipe Image
-    </label>
-    <div className="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-md">
-      <div className="space-y-1 text-center">
-        {imagePreview ? (
-          <img
-            src={imagePreview}
-            alt="Recipe preview"
-            className="mx-auto h-48 w-auto rounded-md"
-          />
-        ) : (
-          <svg
-            className="mx-auto h-12 w-12 text-gray-400"
-            stroke="currentColor"
-            fill="none"
-            viewBox="0 0 48 48"
-            aria-hidden="true"
-          >
-            <path
-              d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-          </svg>
-        )}
-        <div className="flex text-sm text-gray-600">
-          <label
-            htmlFor="file-upload"
-            className="relative cursor-pointer bg-white rounded-md font-medium text-green-600 hover:text-green-500 focus-within:outline-none focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-green-500"
-          >
-            <span>Upload a file</span>
-            <input
-              id="file-upload"
-              name="file-upload"
-              type="file"
-              className="sr-only"
-              onChange={handleImageChange}
-              accept="image/*"
-            />
-          </label>
-          <p className="pl-1">or drag and drop</p>
+const ImageUploader = ({imagePreview, handleImageChange}) => (
+    <div>
+        <label className="block text-lg font-semibold text-neutral-700 mb-2">
+            Recipe Image
+        </label>
+        <div className="mt-1 flex justify-center p-6 border-2 border-neutral-300 border-dashed rounded-xl">
+            <div className="space-y-2 text-center">
+                {imagePreview ? (
+                    <img
+                        src={imagePreview}
+                        alt="Recipe preview"
+                        className="mx-auto h-52 w-auto rounded-lg object-cover"
+                    />
+                ) : (
+                    <div className="flex flex-col items-center justify-center h-52 text-neutral-400">
+                        <Image size={64}/>
+                    </div>
+                )}
+                <div className="flex text-sm justify-center">
+                    <label
+                        htmlFor="file-upload"
+                        className="relative cursor-pointer bg-white rounded-md font-medium
+                       text-primary-600 hover:text-primary-700
+                       focus-within:outline-none focus-within:ring-2
+                       focus-within:ring-offset-2 focus-within:ring-primary-500"
+                    >
+            <span
+                className="flex items-center gap-2 px-4 py-2 border border-neutral-300 rounded-full hover:bg-neutral-50">
+              <UploadCloud size={16}/>
+              <span>Upload a file</span>
+            </span>
+                        <input
+                            id="file-upload"
+                            name="file-upload"
+                            type="file"
+                            className="sr-only"
+                            onChange={handleImageChange}
+                            accept="image/*"
+                        />
+                    </label>
+                </div>
+                <p className="text-xs text-neutral-500">PNG, JPG, GIF up to 10MB</p>
+            </div>
         </div>
-        <p className="text-xs text-gray-500">PNG, JPG, GIF up to 10MB</p>
-      </div>
     </div>
-  </div>
 );
 
 export default ImageUploader;

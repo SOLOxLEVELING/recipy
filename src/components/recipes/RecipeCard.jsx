@@ -1,33 +1,62 @@
 import React from "react";
-import SaveRecipeButton from "./SaveRecipeButton"; // <-- Import the button
+import {Clock, Users} from "lucide-react";
+import SaveRecipeButton from "./SaveRecipeButton";
 
-const RecipeCard = ({ recipe, onSelect }) => {
-  // We use a separate click handler for the card to avoid triggering it when the button is clicked
-  const handleCardClick = () => {
-    onSelect(recipe.id);
-  };
+const RecipeCard = ({recipe, onSelect}) => {
+    const handleCardClick = () => {
+        onSelect(recipe.id);
+    };
 
-  return (
-    <div className="bg-white rounded-lg shadow-md overflow-hidden transform hover:-translate-y-1 transition-transform duration-300 group relative">
-      {/* Save Button positioned at the top-right corner */}
-      <div className="absolute top-2 right-2 z-10">
-        <SaveRecipeButton recipe={recipe} />
-      </div>
+    return (
+        <div
+            className="bg-white rounded-xl shadow-sm overflow-hidden
+                 transform transition-all duration-300
+                 hover:shadow-lg hover:-translate-y-1 group"
+        >
+            <div className="relative">
+                {/* Save Button positioned at the top-right corner */}
+                <div className="absolute top-3 right-3 z-10">
+                    <SaveRecipeButton recipe={recipe}/>
+                </div>
 
-      <div onClick={handleCardClick} className="cursor-pointer">
-        <img
-          src={recipe.image_url}
-          alt={recipe.title}
-          className="w-full h-48 object-cover bg-gray-200"
-        />
-        <div className="p-4">
-          <h3 className="text-lg font-bold text-gray-800 group-hover:text-green-600 transition-colors pr-16">
-            {recipe.title}
-          </h3>
+                {/* Image */}
+                <div onClick={handleCardClick} className="cursor-pointer">
+                    <img
+                        // --- CHANGE: Use 'image' from mockData, not 'image_url' ---
+                        src={recipe.image}
+                        alt={recipe.name} // --- CHANGE: Use 'name' for alt text ---
+                        className="w-full h-auto aspect-video object-cover bg-neutral-200"
+                    />
+                </div>
+            </div>
+
+            {/* Card Content */}
+            <div className="p-4" onClick={handleCardClick}>
+                <h3 className="text-lg font-bold text-neutral-800 group-hover:text-primary-600 transition-colors font-serif">
+                    {/* --- CHANGE: Use 'name' not 'title' --- */}
+                    {recipe.name}
+                </h3>
+
+                {/* Recipe Meta Info */}
+                <div className="flex items-center text-neutral-500 text-sm mt-3 gap-6">
+                    {/* --- CHANGE: Use 'prepTime' not 'prep_time_minutes' --- */}
+                    {recipe.prepTime && (
+                        <div className="flex items-center gap-1.5">
+                            <Clock size={16}/>
+                            {/* --- CHANGE: Use 'prepTime' not 'prep_time_minutes' --- */}
+                            <span>{recipe.prepTime} min</span>
+                        </div>
+                    )}
+                    {recipe.servings && (
+                        <div className="flex items-center gap-1.5">
+                            <Users size={16}/>
+                            <span>{recipe.servings} Servings</span>
+                        </div>
+                    )}
+                </div>
+            </div>
         </div>
-      </div>
-    </div>
-  );
+    );
 };
 
 export default RecipeCard;
