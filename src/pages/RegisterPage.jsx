@@ -1,9 +1,11 @@
 import React, {useState} from "react";
 import {useAuth} from "../context/AuthContext";
 import {UserPlus} from "lucide-react";
+import {Link, useNavigate} from "react-router-dom";
+import toast from "react-hot-toast";
 
-// --- THIS IS THE FIX ---
-// Moved FormInput outside the component
+// ...
+
 const FormInput = (props) => (
     <input
         {...props}
@@ -12,14 +14,15 @@ const FormInput = (props) => (
     />
 );
 
-const RegisterPage = ({setPage}) => {
+const RegisterPage = () => {
     const [formData, setFormData] = useState({
         username: "",
         email: "",
         password: "",
     });
-    const [error, setError] = useState("");
+    // const [error, setError] = useState("");
     const {register} = useAuth();
+    const navigate = useNavigate();
 
     const handleChange = (e) => {
         setFormData({...formData, [e.target.name]: e.target.value});
@@ -27,13 +30,16 @@ const RegisterPage = ({setPage}) => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        setError("");
+        // setError("");
+        const loadingToast = toast.loading("Creating account...");
         try {
             await register(formData.username, formData.email, formData.password);
-            alert("Registration successful! Please log in.");
-            setPage("login");
+            toast.success("Registration successful! Please log in.", { id: loadingToast });
+            navigate("/login");
         } catch (err) {
-            setError(err.response?.data?.error || "Registration failed.");
+            const msg = err.response?.data?.error || "Registration failed.";
+            toast.error(msg, { id: loadingToast });
+            // setError(msg);
         }
     };
 
@@ -82,7 +88,7 @@ const RegisterPage = ({setPage}) => {
                     />
                 </div>
 
-                {error && <p className="text-red-500 text-sm">{error}</p>}
+                {/* Error handled by toast */}
 
                 <button
                     type="submit"
@@ -96,12 +102,12 @@ const RegisterPage = ({setPage}) => {
 
             <p className="text-center text-sm text-neutral-600 mt-6">
                 Already have an account?{" "}
-                <button
-                    onClick={() => setPage("login")}
+                <Link
+                    to="/login"
                     className="font-semibold text-primary-600 hover:text-primary-700"
                 >
                     Log in
-                </button>
+                </Link>
             </p>
         </div>
     );

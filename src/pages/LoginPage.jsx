@@ -1,9 +1,11 @@
 import React, {useState} from "react";
 import {useAuth} from "../context/AuthContext";
 import {ChefHat} from "lucide-react";
+import {Link, useNavigate} from "react-router-dom";
+import toast from "react-hot-toast";
 
-// --- THIS IS THE FIX ---
-// Moved FormInput outside the component
+// ...
+
 const FormInput = (props) => (
     <input
         {...props}
@@ -12,10 +14,11 @@ const FormInput = (props) => (
     />
 );
 
-const LoginPage = ({setPage}) => {
+const LoginPage = () => {
     const [formData, setFormData] = useState({email: "", password: ""});
-    const [error, setError] = useState("");
+    // const [error, setError] = useState(""); // Removed local error state
     const {login} = useAuth();
+    const navigate = useNavigate();
 
     const handleChange = (e) => {
         setFormData({...formData, [e.target.name]: e.target.value});
@@ -23,11 +26,16 @@ const LoginPage = ({setPage}) => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        setError("");
+        // setError("");
+        const loadingToast = toast.loading("Logging in...");
         try {
             await login(formData.email, formData.password);
+            toast.success("Welcome back!", { id: loadingToast });
+            navigate("/discover");
         } catch (err) {
-            setError(err.response?.data?.error || "Login failed.");
+            const msg = err.response?.data?.error || "Login failed.";
+            toast.error(msg, { id: loadingToast });
+            // setError(msg);
         }
     };
 
@@ -65,7 +73,7 @@ const LoginPage = ({setPage}) => {
                     />
                 </div>
 
-                {error && <p className="text-red-500 text-sm">{error}</p>}
+                {/* Error handled by toast */}
 
                 <button
                     type="submit"
@@ -79,12 +87,12 @@ const LoginPage = ({setPage}) => {
 
             <p className="text-center text-sm text-neutral-600 mt-6">
                 Don't have an account?{" "}
-                <button
-                    onClick={() => setPage("register")}
+                <Link
+                    to="/register"
                     className="font-semibold text-primary-600 hover:text-primary-700"
                 >
                     Sign up
-                </button>
+                </Link>
             </p>
         </div>
     );

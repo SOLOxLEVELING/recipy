@@ -1,46 +1,21 @@
 import React from "react";
-import {Bookmark, Home, LogOut, PlusSquare} from 'lucide-react';
+import { Bookmark, Home, LogOut, PlusSquare, ChefHat } from 'lucide-react';
+import { NavLink, useLocation } from 'react-router-dom';
 
-const PageNavigator = ({page, setPage, isAuthenticated, logout}) => {
-    // --- Logged-out State ---
-    // This remains a simple centered toggle
-    if (!isAuthenticated) {
-        return (
-            <nav className="flex justify-center mb-8 bg-white p-2 rounded-lg shadow-sm max-w-sm mx-auto">
-                <button
-                    onClick={() => setPage("login")}
-                    className={`w-1/2 py-2 px-4 rounded-md font-semibold transition-colors ${
-                        page === "login"
-                            ? "bg-primary-600 text-white"
-                            : "text-neutral-600 hover:bg-neutral-100"
-                    }`}
-                >
-                    Login
-                </button>
-                <button
-                    onClick={() => setPage("register")}
-                    className={`w-1/2 py-2 px-4 rounded-md font-semibold transition-colors ${
-                        page === "register"
-                            ? "bg-primary-600 text-white"
-                            : "text-neutral-600 hover:bg-neutral-100"
-                    }`}
-                >
-                    Register
-                </button>
-            </nav>
-        );
-    }
-
-    // --- Logged-in State (Responsive) ---
-    // Don't show the nav bar on the detail page
-    if (page === "detail") return null;
+const PageNavigator = () => {
+    const location = useLocation();
+    
+    // Hide nav on detail pages if desired, or keep it. 
+    // The original code hid it on "detail". 
+    // We can check if the path starts with /recipe/
+    if (location.pathname.startsWith('/recipe/')) return null;
 
     // Helper for nav button styles
-    const getNavButtonClasses = (navPage) => {
+    const getNavButtonClasses = ({ isActive }) => {
         const base = "flex md:flex-row flex-col items-center justify-center gap-1 md:gap-2 md:px-4 md:py-2 py-2 px-2 rounded-md font-semibold transition-colors w-full md:w-auto";
         const active = "text-primary-600 bg-primary-50 md:bg-transparent";
         const inactive = "text-neutral-500 hover:text-primary-600 hover:bg-neutral-100";
-        return `${base} ${page === navPage ? active : inactive}`;
+        return `${base} ${isActive ? active : inactive}`;
     };
 
     return (
@@ -55,40 +30,43 @@ const PageNavigator = ({page, setPage, isAuthenticated, logout}) => {
 
                 <div className="flex justify-around md:justify-center md:gap-4">
                     {/* Discover */}
-                    <button
-                        onClick={() => setPage("discover")}
-                        className={getNavButtonClasses("discover")}
+                    <NavLink
+                        to="/discover"
+                        className={getNavButtonClasses}
                     >
-                        <Home size={24}/>
+                        <Home size={24} />
                         <span className="text-xs md:text-sm">Discover</span>
-                    </button>
+                    </NavLink>
 
                     {/* Recipe Box */}
-                    <button
-                        onClick={() => setPage("recipeBox")}
-                        className={getNavButtonClasses("recipeBox")}
+                    <NavLink
+                        to="/box"
+                        className={getNavButtonClasses}
                     >
-                        <Bookmark size={24}/>
+                        <Bookmark size={24} />
                         <span className="text-xs md:text-sm">Recipe Box</span>
-                    </button>
+                    </NavLink>
 
                     {/* Create */}
-                    <button
-                        onClick={() => setPage("create")}
-                        className={getNavButtonClasses("create")}
+                    <NavLink
+                        to="/create"
+                        className={getNavButtonClasses}
                     >
-                        <PlusSquare size={24}/>
+                        <PlusSquare size={24} />
                         <span className="text-xs md:text-sm">Create</span>
-                    </button>
+                    </NavLink>
 
-                    {/* Logout (Visible only on mobile bottom bar) */}
-                    <button
-                        onClick={logout}
-                        className="flex md:hidden flex-col items-center justify-center gap-1 py-2 px-2 font-semibold text-neutral-500 w-full"
+                    {/* My Recipes */}
+                    <NavLink
+                        to="/my-recipes"
+                        className={getNavButtonClasses}
                     >
-                        <LogOut size={24}/>
-                        <span className="text-xs">Logout</span>
-                    </button>
+                        <ChefHat size={24} />
+                        <span className="text-xs md:text-sm">My Recipes</span>
+                    </NavLink>
+
+                    {/* Logout (Visible only on mobile bottom bar) - Handled by Header on Desktop */}
+                    {/* We can keep a logout button here for mobile if we want, or rely on Header */}
                 </div>
             </nav>
 

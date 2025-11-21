@@ -1,67 +1,50 @@
 import React, {useEffect, useMemo, useRef, useState} from "react";
 import {ArrowLeft, Moon, Sun} from "lucide-react";
+import { useParams, Link, useNavigate } from "react-router-dom";
 import IngredientChecklist from "../components/recipes/IngredientChecklist";
 import InstructionList from "../components/recipes/InstructionList";
 import RatingStars from "../components/reviews/RatingStars";
 import CommentThread from "../components/reviews/CommentThread";
 import SaveRecipeButton from "../components/recipes/SaveRecipeButton";
-// import { fetchRecipeById } from "../services/api"; // No longer using API
-import {mockRecipes} from "../data/mockData"; // <-- IMPORT MOCK DATA
+import {mockRecipes} from "../data/mockData";
 
-const RecipeDetailPage = ({recipeId, onBack}) => {
-    // const [recipe, setRecipe] = useState(null); // Will get recipe from mock
-    // const [isLoading, setIsLoading] = useState(true); // No longer needed
-
-    /*
-    // --- API call is no longer needed ---
-    useEffect(() => {
-      if (!recipeId) {
-        setIsLoading(false);
-        return;
-      }
-      const getRecipe = async () => {
-        setIsLoading(true);
-        try {
-          const response = await fetchRecipeById(recipeId);
-          setRecipe(response.data);
-        } catch (error) {
-          console.error("Failed to fetch recipe:", error);
-          setRecipe(null);
-        } finally {
-          setIsLoading(false);
-        }
-      };
-      getRecipe();
-    }, [recipeId]);
-    */
-
-    // --- FIND THE RECIPE FROM MOCK DATA ---
+const RecipeDetailPage = () => {
+    const { id } = useParams();
+    const navigate = useNavigate();
+    
+    // Convert id to number since mockData IDs are numbers
+    const recipeId = parseInt(id, 10);
     const recipe = mockRecipes.find((r) => r.id === recipeId);
 
-    // if (isLoading) return <p className="text-center">Loading recipe...</p>; // No longer needed
     if (!recipe)
-        return <p className="text-center">Recipe could not be loaded.</p>;
+        return (
+            <div className="text-center py-20">
+                <h2 className="text-2xl font-bold text-neutral-700">Recipe not found</h2>
+                <Link to="/discover" className="text-primary-600 hover:underline mt-4 inline-block">
+                    Return to Discover
+                </Link>
+            </div>
+        );
 
-    return <RecipeDetailContent recipe={recipe} onBack={onBack}/>;
+    return <RecipeDetailContent recipe={recipe} />;
 };
 
 // Sub-component to keep logic clean and ensure 'recipe' object exists
-const RecipeDetailContent = ({recipe, onBack}) => {
+const RecipeDetailContent = ({recipe}) => {
     const [isCookMode, setIsCookMode] = useState(false);
-    const wakeLockRef = useRef(null);
+    const navigate = useNavigate();
 
     const [ratings, setRatings] = useState(recipe.ratings || []);
     const [comments, setComments] = useState(recipe.comments || []);
 
     // Effect for Cook Mode screen wake lock
     useEffect(() => {
-        // ... (wake lock logic remains the same)
+        // Wake lock logic would go here
     }, [isCookMode]);
 
     const averageRating = useMemo(() => {
         if (!ratings || ratings.length === 0) return 0;
-        // --- FIX: mockData 'ratings' is an array of numbers, not objects ---
-        const sum = ratings.reduce((acc, r) => acc + r, 0); // Just sum the numbers
+        const sum = ratings.reduce((acc, r) => acc + r, 0);
         return sum / ratings.length;
     }, [ratings]);
 
@@ -69,24 +52,23 @@ const RecipeDetailContent = ({recipe, onBack}) => {
         <div className="max-w-6xl mx-auto bg-white p-4 sm:p-8 rounded-xl shadow-lg">
             <header className="mb-8">
                 <button
-                    onClick={onBack}
+                    onClick={() => navigate(-1)}
                     className="flex items-center text-primary-600 hover:text-primary-700 font-semibold mb-4"
                 >
                     <ArrowLeft size={20} className="mr-2"/>
-                    Back to Discover
+                    Back
                 </button>
                 <img
-                    src={recipe.image} // --- FIX: Use 'image' ---
-                    alt={recipe.name} // --- FIX: Use 'name' ---
+                    src={recipe.image}
+                    alt={recipe.name}
                     className="w-full h-64 sm:h-96 object-cover rounded-lg mb-6 shadow-md"
                 />
                 <div className="flex justify-between items-start flex-wrap gap-4">
                     <div>
                         <h1 className="text-4xl sm:text-5xl font-bold text-neutral-900 font-serif">
-                            {recipe.name} {/* --- FIX: Use 'name' --- */}
+                            {recipe.name}
                         </h1>
                         <p className="text-lg text-neutral-600 mt-1">
-                            {/* --- FIX: 'author' doesn't exist, provide a fallback --- */}
                             By {recipe.author || "Recipe Share"}
                         </p>
                         <div className="flex items-center mt-3 gap-2 text-neutral-500">
@@ -114,27 +96,20 @@ const RecipeDetailContent = ({recipe, onBack}) => {
 
             <main className="grid grid-cols-1 lg:grid-cols-3 lg:gap-12">
                 <div className="lg:col-span-1 mb-8 lg:mb-0">
-                    {/* --- FIX: 'IngredientChecklist' expects an array of objects,
-            but mockData provides an array of strings.
-            We must convert it.
-          */}
                     <IngredientChecklist
                         ingredients={
                             Array.isArray(recipe.ingredients)
-                                ? recipe.ingredients.map((ing) => ({name: ing})) // Convert string to {name: string}
+                                ? recipe.ingredients.map((ing) => ({name: ing}))
                                 : []
                         }
                         baseServings={recipe.servings}
                     />
                 </div>
                 <div className="lg:col-span-2">
-                    {/* --- FIX: 'InstructionList' expects an array of strings,
-            but the code was trying to .map() it.
-          */}
                     <InstructionList
                         instructions={
                             Array.isArray(recipe.instructions)
-                                ? recipe.instructions // Just pass the string array directly
+                                ? recipe.instructions
                                 : []
                         }
                     />

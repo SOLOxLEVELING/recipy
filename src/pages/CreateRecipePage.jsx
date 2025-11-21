@@ -2,7 +2,7 @@ import React, {useState} from "react";
 import {postRecipe} from "../services/api";
 import IngredientList from "../components/form/IngredientList"; // Corrected path
 import InstructionStep from "../components/form/InstructionStep";
-import ImageUploader from "../components/form/ImageUploader";
+import ImageUpload from "../components/common/ImageUpload";
 import {Plus, Send} from "lucide-react";
 
 // A reusable styled input component for this form
@@ -29,16 +29,7 @@ const CreateRecipePage = () => {
         {name: "", quantity: "", unit: ""},
     ]);
     const [instructions, setInstructions] = useState([""]);
-    const [image, setImage] = useState(null);
-    const [imagePreview, setImagePreview] = useState("");
-
-    const handleImageChange = (e) => {
-        if (e.target.files[0]) {
-            const file = e.target.files[0];
-            setImage(file);
-            setImagePreview(URL.createObjectURL(file));
-        }
-    };
+    const [imageUrl, setImageUrl] = useState("");
 
     const handleIngredientChange = (index, event) => {
         const newIngredients = ingredients.map((ing, i) =>
@@ -74,7 +65,7 @@ const CreateRecipePage = () => {
             prep_time_minutes: parseInt(prepTime, 10),
             cook_time_minutes: parseInt(cookTime, 10),
             servings: parseInt(servings, 10),
-            image_url: "https://placehold.co/600x400/22c55e/ffffff?text=New+Recipe", // Placeholder
+            image_url: imageUrl || "https://placehold.co/600x400/22c55e/ffffff?text=New+Recipe",
             ingredients: ingredients.map((ing) => ({
                 ...ing,
                 quantity: parseFloat(ing.quantity),
@@ -204,9 +195,10 @@ const CreateRecipePage = () => {
                 <div className="lg:col-span-1 space-y-6">
                     <div className="sticky top-8 space-y-6">
                         <div className="p-6 bg-white rounded-xl shadow-sm border border-neutral-200">
-                            <ImageUploader
-                                imagePreview={imagePreview}
-                                handleImageChange={handleImageChange}
+                            <label className="block text-sm font-semibold text-neutral-700 mb-3">Recipe Image</label>
+                            <ImageUpload
+                                value={imageUrl}
+                                onChange={setImageUrl}
                             />
                         </div>
 

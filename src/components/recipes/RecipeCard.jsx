@@ -1,12 +1,9 @@
 import React from "react";
 import {Clock, Users} from "lucide-react";
 import SaveRecipeButton from "./SaveRecipeButton";
+import { Link } from "react-router-dom";
 
-const RecipeCard = ({recipe, onSelect}) => {
-    const handleCardClick = () => {
-        onSelect(recipe.id);
-    };
-
+const RecipeCard = ({recipe}) => {
     return (
         <div
             className="bg-white rounded-xl shadow-sm overflow-hidden
@@ -20,30 +17,28 @@ const RecipeCard = ({recipe, onSelect}) => {
                 </div>
 
                 {/* Image */}
-                <div onClick={handleCardClick} className="cursor-pointer">
+                <Link to={`/recipe/${recipe.id}`} className="cursor-pointer block focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 rounded-xl">
                     <img
-                        // --- CHANGE: Use 'image' from mockData, not 'image_url' ---
                         src={recipe.image}
-                        alt={recipe.name} // --- CHANGE: Use 'name' for alt text ---
+                        alt={recipe.name}
                         className="w-full h-auto aspect-video object-cover bg-neutral-200"
                     />
-                </div>
+                </Link>
             </div>
 
             {/* Card Content */}
-            <div className="p-4" onClick={handleCardClick}>
-                <h3 className="text-lg font-bold text-neutral-800 group-hover:text-primary-600 transition-colors font-serif">
-                    {/* --- CHANGE: Use 'name' not 'title' --- */}
-                    {recipe.name}
-                </h3>
+            <div className="p-4">
+                <Link to={`/recipe/${recipe.id}`} className="block focus:outline-none focus:underline">
+                    <h3 className="text-lg font-bold text-neutral-800 group-hover:text-primary-600 transition-colors font-serif">
+                        {recipe.name}
+                    </h3>
+                </Link>
 
                 {/* Recipe Meta Info */}
                 <div className="flex items-center text-neutral-500 text-sm mt-3 gap-6">
-                    {/* --- CHANGE: Use 'prepTime' not 'prep_time_minutes' --- */}
                     {recipe.prepTime && (
                         <div className="flex items-center gap-1.5">
                             <Clock size={16}/>
-                            {/* --- CHANGE: Use 'prepTime' not 'prep_time_minutes' --- */}
                             <span>{recipe.prepTime} min</span>
                         </div>
                     )}

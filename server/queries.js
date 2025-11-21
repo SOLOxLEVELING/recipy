@@ -146,6 +146,99 @@ const findUserByEmail = async (email) => {
   return rows[0];
 };
 
+// Exports moved to the end
+
+const getRecipesByAuthor = async (authorId) => {
+  const { rows } = await db.query(
+    `SELECT r.id, r.title, r.image_url, 
+            (SELECT AVG(score) FROM ratings WHERE recipe_id = r.id) as average_rating
+     FROM recipes r
+     WHERE r.author_id = $1`,
+    [authorId]
+  );
+  return rows;
+};
+
+const updateRecipe = async (id, recipeData) => {
+  const {
+    title,
+    description,
+    prep_time_minutes,
+    cook_time_minutes,
+    servings,
+    image_url,
+  } = recipeData;
+
+  const { rows } = await db.query(
+    `UPDATE recipes 
+     SET title = $1, description = $2, prep_time_minutes = $3, cook_time_minutes = $4, servings = $5, image_url = $6
+     WHERE id = $7
+     RETURNING *`,
+    [
+      title,
+      description,
+      prep_time_minutes,
+      cook_time_minutes,
+      servings,
+      image_url,
+      id,
+    ]
+  );
+  return rows[0];
+};
+
+const updateIngredients = async (recipeId, ingredients) => {
+  const client = await db.pool.connect();
+  try {
+    await client.query("BEGIN");
+    // First delete existing ingredients
+    await client.query("DELETE FROM ingredients WHERE recipe_id = $1", [
+      recipeId,
+    ]);
+
+    // Then insert new ones
+    for (const ing of ingredients) {
+      await client.query(
+        "INSERT INTO ingredients (recipe_id, name, quantity, unit) VALUES ($1, $2, $3, $4)",
+        [recipeId, ing.name, parseFloat(ing.quantity) || null, ing.unit]
+      );
+    }
+    await client.query("COMMIT");
+    return true;
+  } catch (e) {
+    await client.query("ROLLBACK");
+    throw e;
+  } finally {
+    client.release();
+  }
+};
+
+const updateInstructions = async (recipeId, instructions) => {
+  const client = await db.pool.connect();
+  try {
+    await client.query("BEGIN");
+    // First delete existing instructions
+    await client.query("DELETE FROM instructions WHERE recipe_id = $1", [
+      recipeId,
+    ]);
+
+    // Then insert new ones
+    for (const inst of instructions) {
+      await client.query(
+        "INSERT INTO instructions (recipe_id, step_number, description) VALUES ($1, $2, $3)",
+        [recipeId, inst.step_number, inst.description]
+      );
+    }
+    await client.query("COMMIT");
+    return true;
+  } catch (e) {
+    await client.query("ROLLBACK");
+    throw e;
+  } finally {
+    client.release();
+  }
+};
+
 module.exports = {
   getAllRecipes,
   getRecipeById,
@@ -155,4 +248,8 @@ module.exports = {
   removeRecipeFromBox,
   createUser,
   findUserByEmail,
+  getRecipesByAuthor,
+  updateRecipe,
+  updateIngredients,
+  updateInstructions,
 };

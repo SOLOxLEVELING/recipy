@@ -6,3 +6,4 @@ import tailwindcss from "@tailwindcss/vite";
 export default defineConfig({
   plugins: [react(), tailwindcss()],
 });
+// Forced restart for Tailwind config update - 3

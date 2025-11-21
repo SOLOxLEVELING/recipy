@@ -9,25 +9,46 @@
     --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
     --font-serif: "Lora", serif;
 
-    --color-secondary-50: #fffbeb;
-    --color-secondary-400: #fbbf24;
-    --color-neutral-800: #292524;
+    /* Modern Premium Palette - Artistic Green */
+    --color-secondary-50: #f4f7f5; /* Very soft green-tinted white */
+    --color-secondary-100: #e3ebe5;
+    --color-secondary-200: #c5d8cc;
+    --color-secondary-300: #9dbfa9;
+    --color-secondary-400: #76a185;
+    --color-secondary-500: #558564; /* Muted Sage */
+    --color-secondary-600: #426a4e;
+    --color-secondary-700: #365540;
+    --color-secondary-800: #2d4435;
+    --color-secondary-900: #26392d;
+    --color-secondary-950: #131f18;
 
-    --color-primary-50: #f0fdf4;
-    --color-primary-100: #dcfce7;
-    --color-primary-200: #bbf7d0;
-    --color-primary-300: #86efac;
-    --color-primary-400: #4ade80;
-    --color-primary-500: #22c55e;
-    --color-primary-600: #16a34a;
-    --color-primary-700: #15803d;
-    --color-primary-800: #166534;
-    --color-primary-900: #14532d;
-    --color-primary-950: #052e16;
+    --color-neutral-50: #f9fafb;
+    --color-neutral-100: #f3f4f6;
+    --color-neutral-200: #e5e7eb;
+    --color-neutral-300: #d1d5db;
+    --color-neutral-400: #9ca3af;
+    --color-neutral-500: #6b7280;
+    --color-neutral-600: #4b5563;
+    --color-neutral-700: #374151;
+    --color-neutral-800: #1f2937;
+    --color-neutral-900: #111827;
+    --color-neutral-950: #030712;
+
+    /* Primary: Deep Emerald */
+    --color-primary-50: #effef6;
+    --color-primary-100: #dafeea;
+    --color-primary-200: #b8fbd6;
+    --color-primary-300: #8bf5bb;
+    --color-primary-400: #52e69d;
+    --color-primary-500: #26cc7c;
+    --color-primary-600: #16a862;
+    --color-primary-700: #138650;
+    --color-primary-800: #136a42;
+    --color-primary-900: #115738;
+    --color-primary-950: #06311f;
 }
 
 /* Apply our base styles to the body */
-* Optional global base styles */
 @layer base {
     body {
         @apply font-sans bg-secondary-50 text-neutral-800;
