@@ -3,13 +3,16 @@ import { supabase } from "../lib/supabase";
 // --- Recipes ---
 
 export const fetchRecipes = async ({ search, category }) => {
+    // Determine if we need strict filtering for categories
+    const isCategoryFilter = category && category !== 'All';
+    
     let query = supabase
         .from('recipes')
         .select(`
             *,
             author:profiles!recipes_author_id_fkey(username),
             ratings(score),
-            recipe_categories(
+            recipe_categories${isCategoryFilter ? '!inner' : ''}(
                 category:categories(name)
             )
         `);
@@ -18,7 +21,7 @@ export const fetchRecipes = async ({ search, category }) => {
         query = query.ilike('title', `%${search}%`);
     }
 
-    if (category && category !== 'All') {
+    if (isCategoryFilter) {
         query = query.eq('recipe_categories.category.name', category);
     }
 
