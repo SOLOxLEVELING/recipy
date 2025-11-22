@@ -20,10 +20,11 @@ const RegisterPage = () => {
         username: "",
         email: "",
         password: "",
+        confirmPassword: "",
     });
     const [error, setError] = useState("");
     const [isLoading, setIsLoading] = useState(false);
-    const {register} = useAuth();
+    const {register, loginWithGoogle} = useAuth();
     const navigate = useNavigate();
 
     const handleChange = (e) => {
@@ -35,19 +36,17 @@ const RegisterPage = () => {
         setError("");
         setIsLoading(true);
 
-        if (formData.password !== formData.confirmPassword) { // Use formData for password and confirmPassword
+        if (formData.password !== formData.confirmPassword) {
             setError("Passwords do not match");
             setIsLoading(false);
             return;
         }
 
         try {
-            // Updated register call arguments and success message
             await register(formData.email, formData.password, formData.username);
             toast.success("Registration successful! Please check your email to confirm.");
             navigate("/login");
         } catch (err) {
-            // Updated error handling
             setError(err.message || "Failed to register. Please try again.");
             toast.error(err.message || "Registration failed");
         } finally {
@@ -142,6 +141,17 @@ const RegisterPage = () => {
                         name="password"
                         placeholder="Create a strong password"
                         value={formData.password}
+                        onChange={handleChange}
+                        required
+                    />
+                </div>
+                <div>
+                    <label className="block text-sm font-semibold text-neutral-700 mb-1">Confirm Password</label>
+                    <FormInput
+                        type="password"
+                        name="confirmPassword"
+                        placeholder="Confirm your password"
+                        value={formData.confirmPassword}
                         onChange={handleChange}
                         required
                     />

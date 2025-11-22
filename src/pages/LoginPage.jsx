@@ -19,7 +19,7 @@ const LoginPage = () => {
     const [formData, setFormData] = useState({email: "", password: ""});
     const [error, setError] = useState("");
     const [isLoading, setIsLoading] = useState(false);
-    const {login} = useAuth();
+    const {login, loginWithGoogle} = useAuth();
     const navigate = useNavigate();
 
     const location = useLocation();
@@ -35,7 +35,7 @@ const LoginPage = () => {
         setIsLoading(true);
 
         try {
-            await login(email, password);
+            await login(formData.email, formData.password);
             toast.success("Welcome back!");
             navigate(from, { replace: true });
         } catch (err) {
