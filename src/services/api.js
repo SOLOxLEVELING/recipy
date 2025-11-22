@@ -222,21 +222,29 @@ export const fetchUserProfile = async () => {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) throw new Error("No user logged in");
 
-    const { data, error } = await supabase
+    const { data: profile, error } = await supabase
         .from('profiles')
         .select('*')
         .eq('id', user.id)
         .single();
 
     if (error) throw error;
-    return { data };
+    
+    // Merge auth data (email, created_at) with profile data
+    return { 
+        data: { 
+            ...profile, 
+            email: user.email, 
+            created_at: user.created_at 
+        } 
+    };
 };
 
 export const updateUserProfile = async (updates) => {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) throw new Error("No user logged in");
 
-    const { data, error } = await supabase
+    const { data: profile, error } = await supabase
         .from('profiles')
         .update(updates)
         .eq('id', user.id)
@@ -244,7 +252,36 @@ export const updateUserProfile = async (updates) => {
         .single();
 
     if (error) throw error;
-    return { data };
+    
+    // Return merged data to maintain state consistency
+    return { 
+        data: { 
+            ...profile, 
+            email: user.email, 
+            created_at: user.created_at 
+        } 
+    };
+};
+
+export const deleteAccount = async () => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) throw new Error("No user logged in");
+
+    // Call the RPC function to delete the user from auth.users
+    const { error } = await supabase.rpc('delete_user');
+    
+    if (error) {
+        console.error("RPC delete_user failed, trying fallback profile delete", error);
+        // Fallback: Delete profile row (cascades to data) if RPC fails/doesn't exist
+        const { error: profileError } = await supabase
+            .from('profiles')
+            .delete()
+            .eq('id', user.id);
+            
+        if (profileError) throw profileError;
+    }
+    
+    return { success: true };
 };
 
 export const fetchMyRecipes = async () => {

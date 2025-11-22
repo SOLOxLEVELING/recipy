@@ -109,7 +109,16 @@ CREATE TRIGGER on_auth_user_created
   AFTER INSERT ON auth.users
   FOR EACH ROW EXECUTE PROCEDURE public.handle_new_user();
 
--- 5. Seed Data (Categories)
+-- 5. Function to Delete User (Self-Service)
+-- Allows a user to delete their own account from auth.users
+CREATE OR REPLACE FUNCTION delete_user()
+RETURNS void AS $$
+BEGIN
+  DELETE FROM auth.users WHERE id = auth.uid();
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- 6. Seed Data (Categories)
 INSERT INTO categories (name) VALUES
 ('Italian'),
 ('Pasta'),

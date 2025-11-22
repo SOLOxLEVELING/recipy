@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from "react";
 import { useAuth } from "../context/AuthContext";
-import { fetchUserProfile, updateUserProfile, fetchMyRecipes } from "../services/api";
+import { fetchUserProfile, updateUserProfile, fetchMyRecipes, deleteAccount } from "../services/api";
 import RecipeCardGrid from "../components/recipes/RecipeCardGrid";
 import ImageUpload from "../components/common/ImageUpload";
-import { User, Mail, Calendar, Edit2, Save, X } from "lucide-react";
+import { User, Mail, Calendar, Edit2, Save, X, Trash2 } from "lucide-react";
 import toast from "react-hot-toast";
 import SEO from "../components/common/SEO";
 
@@ -57,6 +57,61 @@ const UserProfilePage = () => {
         } catch (error) {
             console.error(error);
             toast.error("Failed to update profile", { id: toastId });
+        }
+    };
+
+    const handleDeleteAccount = () => {
+        toast.custom((t) => (
+            <div
+                className={`${
+                    t.visible ? 'animate-enter' : 'animate-leave'
+                } max-w-sm w-full bg-white shadow-xl rounded-2xl pointer-events-auto border border-neutral-100 overflow-hidden`}
+            >
+                <div className="p-5">
+                    <div className="flex items-start gap-4">
+                        <div className="flex-shrink-0 bg-red-50 p-2 rounded-full">
+                            <Trash2 size={20} className="text-red-500" />
+                        </div>
+                        <div className="flex-1">
+                            <h3 className="text-sm font-bold text-neutral-900 font-serif">
+                                Delete Account?
+                            </h3>
+                            <p className="mt-1 text-sm text-neutral-500">
+                                This will permanently delete your account and all your recipes.
+                            </p>
+                        </div>
+                    </div>
+                    <div className="mt-4 flex gap-3">
+                        <button
+                            onClick={() => toast.dismiss(t.id)}
+                            className="flex-1 px-4 py-2 bg-neutral-50 text-neutral-700 text-sm font-semibold rounded-xl hover:bg-neutral-100 transition-colors"
+                        >
+                            Cancel
+                        </button>
+                        <button
+                            onClick={() => {
+                                toast.dismiss(t.id);
+                                confirmDeleteAccount();
+                            }}
+                            className="flex-1 px-4 py-2 bg-red-500 text-white text-sm font-bold rounded-xl hover:bg-red-600 transition-colors shadow-sm shadow-red-200"
+                        >
+                            Delete
+                        </button>
+                    </div>
+                </div>
+            </div>
+        ), { duration: 5000 });
+    };
+
+    const confirmDeleteAccount = async () => {
+        const toastId = toast.loading("Deleting account...");
+        try {
+            await deleteAccount();
+            toast.success("Account deleted", { id: toastId });
+            logout(); // Sign out the user
+        } catch (error) {
+            console.error("Failed to delete account", error);
+            toast.error("Failed to delete account. Please try again.", { id: toastId });
         }
     };
 
@@ -181,6 +236,22 @@ const UserProfilePage = () => {
                     </div>
                 )}
             </div>
+
+            {/* Delete Account Section (Only visible when editing) */}
+            {isEditing && (
+                <div className="mt-16 pt-8 border-t border-neutral-200">
+                    <h3 className="text-lg font-bold text-red-600 mb-2">Danger Zone</h3>
+                    <p className="text-neutral-500 text-sm mb-4">
+                        Once you delete your account, there is no going back. Please be certain.
+                    </p>
+                    <button
+                        onClick={handleDeleteAccount}
+                        className="px-6 py-3 bg-red-50 text-red-600 font-semibold rounded-xl hover:bg-red-100 transition-colors border border-red-100"
+                    >
+                        Delete Account
+                    </button>
+                </div>
+            )}
         </div>
     );
 };
