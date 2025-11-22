@@ -1,5 +1,5 @@
-import React, {useState} from "react";
-import {postRecipe} from "../services/api";
+import React, {useState, useEffect} from "react";
+import {postRecipe, fetchCategories} from "../services/api";
 import { supabase } from "../lib/supabase";
 import IngredientList from "../components/form/IngredientList";
 import InstructionStep from "../components/form/InstructionStep";
@@ -36,6 +36,22 @@ const CreateRecipePage = () => {
     const [instructions, setInstructions] = useState([""]);
     const [imageFile, setImageFile] = useState(null); 
     const [isSubmitting, setIsSubmitting] = useState(false);
+    
+    // Category State
+    const [categories, setCategories] = useState([]);
+    const [selectedCategory, setSelectedCategory] = useState("");
+
+    useEffect(() => {
+        const loadCategories = async () => {
+            try {
+                const { data } = await fetchCategories();
+                setCategories(data || []);
+            } catch (error) {
+                console.error("Failed to load categories", error);
+            }
+        };
+        loadCategories();
+    }, []);
 
     const handleIngredientChange = (index, event) => {
         const newIngredients = ingredients.map((ing, i) =>
@@ -99,6 +115,7 @@ const CreateRecipePage = () => {
                 cook_time_minutes: parseInt(cookTime, 10),
                 servings: parseInt(servings, 10),
                 image_url: uploadedImageUrl,
+                category_id: selectedCategory ? parseInt(selectedCategory) : null,
                 ingredients: ingredients.map((ing) => ({
                     ...ing,
                     quantity: parseFloat(ing.quantity) || 0,
@@ -153,6 +170,25 @@ const CreateRecipePage = () => {
                           focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
                             placeholder="A brief, tasty description of your recipe..."
                         ></textarea>
+                    </div>
+
+                    <div className="p-6 bg-white rounded-xl shadow-sm border border-neutral-200">
+                        <FormLabel htmlFor="category">Category</FormLabel>
+                        <select
+                            id="category"
+                            value={selectedCategory}
+                            onChange={(e) => setSelectedCategory(e.target.value)}
+                            className="w-full p-2.5 border border-neutral-300 rounded-md
+                          focus:ring-2 focus:ring-primary-500 focus:border-primary-500 bg-white"
+                            required
+                        >
+                            <option value="">Select a Category</option>
+                            {categories.map((cat) => (
+                                <option key={cat.id} value={cat.id}>
+                                    {cat.name}
+                                </option>
+                            ))}
+                        </select>
                     </div>
 
                     <div

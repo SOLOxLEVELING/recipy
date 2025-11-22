@@ -9,7 +9,7 @@ export const fetchRecipes = async ({ search, category }) => {
             *,
             author:profiles!recipes_author_id_fkey(username),
             ratings(score),
-            recipe_categories!inner(
+            recipe_categories(
                 category:categories(name)
             )
         `);
@@ -106,7 +106,32 @@ export const postRecipe = async (recipeData) => {
         if (instError) console.error("Error inserting instructions:", instError);
     }
 
+    // 4. Insert Category
+    if (recipeData.category_id) {
+        const { error: catError } = await supabase
+            .from('recipe_categories')
+            .insert([{
+                recipe_id: recipe.id,
+                category_id: recipeData.category_id
+            }]);
+        if (catError) console.error("Error inserting category:", catError);
+    }
+
     return { data: recipe };
+};
+
+export const deleteRecipe = async (id) => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) throw new Error("User not authenticated");
+
+    const { error } = await supabase
+        .from('recipes')
+        .delete()
+        .eq('id', id)
+        .eq('author_id', user.id); // Security check
+
+    if (error) throw error;
+    return { success: true };
 };
 
 export const updateRecipe = async (id, recipeData) => {
