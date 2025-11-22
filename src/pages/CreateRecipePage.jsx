@@ -34,7 +34,7 @@ const CreateRecipePage = () => {
         {name: "", quantity: "", unit: ""},
     ]);
     const [instructions, setInstructions] = useState([""]);
-    const [imageFile, setImageFile] = useState(null); // Changed to store File object
+    const [imageFile, setImageFile] = useState(null); 
     const [isSubmitting, setIsSubmitting] = useState(false);
 
     const handleIngredientChange = (index, event) => {
@@ -231,7 +231,6 @@ const CreateRecipePage = () => {
                     <div className="sticky top-8 space-y-6">
                         <div className="p-6 bg-white rounded-xl shadow-sm border border-neutral-200">
                             <label className="block text-sm font-semibold text-neutral-700 mb-3">Recipe Image</label>
-                            {/* ImageUpload now expects onFileChange to pass the File object */}
                             <ImageUpload
                                 onFileChange={(file) => setImageFile(file)}
                             />

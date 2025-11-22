@@ -1,6 +1,6 @@
 import React, { createContext, useState, useEffect, useContext } from "react";
-import api from "../services/api"; // Changed to use the default export from api.js
-import { useAuth } from "./AuthContext"; // <-- 1. Import the useAuth hook
+import { fetchSavedRecipes, saveRecipeToBox, removeRecipeFromBox } from "../services/api";
+import { useAuth } from "./AuthContext";
 
 const RecipeBoxContext = createContext();
 
@@ -10,34 +10,29 @@ export const useRecipeBox = () => {
 
 export const RecipeBoxProvider = ({ children }) => {
   const [savedRecipes, setSavedRecipes] = useState([]);
-  const { token } = useAuth(); // <-- 2. Get the token directly from the AuthContext
+  const { token, user } = useAuth(); // Get user/token
 
-  // This useEffect will now automatically re-run whenever a user logs in or out,
-  // because its dependency 'token' comes from the AuthContext.
+  // Fetch saved recipes when user is logged in
   useEffect(() => {
     const fetchSaved = async () => {
-      // If the user is logged in (token exists), fetch their saved recipes.
-      if (token) {
+      if (user) {
         try {
-          const response = await api.get("/api/saved-recipes");
-          setSavedRecipes(response.data);
+          const response = await fetchSavedRecipes();
+          setSavedRecipes(response.data || []);
         } catch (error) {
           console.error("Could not fetch saved recipes", error);
-          if (error.response && error.response.status === 401) {
-            console.error("Auth token is invalid or expired.");
-          }
         }
       } else {
-        // If the user logs out (token is null), clear the saved recipes from the state.
         setSavedRecipes([]);
       }
     };
 
     fetchSaved();
-  }, [token]); // The dependency is the token from AuthContext
+  }, [user]);
 
   const addRecipe = async (recipeToAdd) => {
     try {
+      // Optimistic update
       setSavedRecipes((prevRecipes) => [
         ...prevRecipes,
         {
@@ -46,9 +41,10 @@ export const RecipeBoxProvider = ({ children }) => {
           image_url: recipeToAdd.image_url,
         },
       ]);
-      await api.post("/api/saved-recipes", { recipeId: recipeToAdd.id });
+      await saveRecipeToBox(recipeToAdd.id);
     } catch (error) {
       console.error("Failed to save recipe", error);
+      // Revert on failure
       setSavedRecipes((prevRecipes) =>
         prevRecipes.filter((r) => r.id !== recipeToAdd.id)
       );
@@ -57,12 +53,14 @@ export const RecipeBoxProvider = ({ children }) => {
 
   const removeRecipe = async (idToRemove) => {
     try {
+      // Optimistic update
       setSavedRecipes((prevRecipes) =>
         prevRecipes.filter((r) => r.id !== idToRemove)
       );
-      await api.delete(`/api/saved-recipes/${idToRemove}`);
+      await removeRecipeFromBox(idToRemove);
     } catch (error) {
       console.error("Failed to remove recipe", error);
+      // Could revert here if needed, but less critical for removal
     }
   };
 
