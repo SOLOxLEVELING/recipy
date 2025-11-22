@@ -1,10 +1,13 @@
 import React, {useState} from "react";
 import {postRecipe} from "../services/api";
-import IngredientList from "../components/form/IngredientList"; // Corrected path
+import { supabase } from "../lib/supabase";
+import IngredientList from "../components/form/IngredientList";
 import InstructionStep from "../components/form/InstructionStep";
 import ImageUpload from "../components/common/ImageUpload";
 import {Plus, Send} from "lucide-react";
 import SEO from "../components/common/SEO";
+import { toast } from "react-hot-toast";
+import { useNavigate } from "react-router-dom";
 
 // A reusable styled input component for this form
 const FormInput = (props) => (
@@ -21,6 +24,7 @@ const FormLabel = (props) => (
 );
 
 const CreateRecipePage = () => {
+    const navigate = useNavigate();
     const [title, setTitle] = useState("");
     const [description, setDescription] = useState("");
     const [prepTime, setPrepTime] = useState("");
@@ -30,7 +34,8 @@ const CreateRecipePage = () => {
         {name: "", quantity: "", unit: ""},
     ]);
     const [instructions, setInstructions] = useState([""]);
-    const [imageUrl, setImageUrl] = useState("");
+    const [imageFile, setImageFile] = useState(null); // Changed to store File object
+    const [isSubmitting, setIsSubmitting] = useState(false);
 
     const handleIngredientChange = (index, event) => {
         const newIngredients = ingredients.map((ing, i) =>
@@ -52,38 +57,66 @@ const CreateRecipePage = () => {
     const removeInstruction = (index) =>
         setInstructions(instructions.filter((_, i) => i !== index));
 
+    const uploadImage = async (file) => {
+        if (!file) return null;
+        const fileExt = file.name.split('.').pop();
+        const fileName = `${Math.random()}.${fileExt}`;
+        const filePath = `${fileName}`;
+
+        const { error: uploadError } = await supabase.storage
+            .from('recipe-images')
+            .upload(filePath, file);
+
+        if (uploadError) {
+            throw uploadError;
+        }
+
+        const { data } = supabase.storage.from('recipe-images').getPublicUrl(filePath);
+        return data.publicUrl;
+    };
+
     const handleSubmit = async (e) => {
         e.preventDefault();
-        // In a real app, you would handle image upload to a service (e.g., S3, Cloudinary)
-        // and get back a URL. For now, we'll continue to send a placeholder.
-        console.log("Form data submitted:", {
-            title, description, prepTime, cookTime, servings, ingredients, instructions, image
-        });
-
-        const payload = {
-            title,
-            description,
-            prep_time_minutes: parseInt(prepTime, 10),
-            cook_time_minutes: parseInt(cookTime, 10),
-            servings: parseInt(servings, 10),
-            image_url: imageUrl || "https://placehold.co/600x400/22c55e/ffffff?text=New+Recipe",
-            ingredients: ingredients.map((ing) => ({
-                ...ing,
-                quantity: parseFloat(ing.quantity),
-            })),
-            instructions: instructions.map((desc, index) => ({
-                step_number: index + 1,
-                description: desc,
-            })),
-        };
+        setIsSubmitting(true);
+        const loadingToast = toast.loading("Creating recipe...");
 
         try {
+            let uploadedImageUrl = "https://placehold.co/600x400/22c55e/ffffff?text=New+Recipe";
+            
+            if (imageFile) {
+                try {
+                    uploadedImageUrl = await uploadImage(imageFile);
+                } catch (uploadErr) {
+                    console.error("Image upload failed:", uploadErr);
+                    toast.error("Failed to upload image, using placeholder.", { id: loadingToast });
+                }
+            }
+
+            const payload = {
+                title,
+                description,
+                prep_time_minutes: parseInt(prepTime, 10),
+                cook_time_minutes: parseInt(cookTime, 10),
+                servings: parseInt(servings, 10),
+                image_url: uploadedImageUrl,
+                ingredients: ingredients.map((ing) => ({
+                    ...ing,
+                    quantity: parseFloat(ing.quantity) || 0,
+                })),
+                instructions: instructions.map((desc, index) => ({
+                    step_number: index + 1,
+                    description: desc,
+                })),
+            };
+
             await postRecipe(payload);
-            alert("Recipe created successfully!");
-            // Reset form (optional)
+            toast.success("Recipe created successfully!", { id: loadingToast });
+            navigate("/discover");
         } catch (error) {
             console.error("Failed to create recipe:", error);
-            alert("Error: Could not create recipe.");
+            toast.error("Error: Could not create recipe.", { id: loadingToast });
+        } finally {
+            setIsSubmitting(false);
         }
     };
 
@@ -117,7 +150,7 @@ const CreateRecipePage = () => {
                             value={description}
                             onChange={(e) => setDescription(e.target.value)}
                             className="w-full p-2.5 border border-neutral-300 rounded-md
-                         focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                          focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
                             placeholder="A brief, tasty description of your recipe..."
                         ></textarea>
                     </div>
@@ -184,8 +217,8 @@ const CreateRecipePage = () => {
                             type="button"
                             onClick={addInstruction}
                             className="mt-3 flex items-center gap-2 px-4 py-2
-                         bg-primary-50 text-primary-600 font-semibold rounded-full
-                         hover:bg-primary-100 transition-colors"
+                          bg-primary-50 text-primary-600 font-semibold rounded-full
+                          hover:bg-primary-100 transition-colors"
                         >
                             <Plus size={18}/>
                             Add Step
@@ -198,20 +231,21 @@ const CreateRecipePage = () => {
                     <div className="sticky top-8 space-y-6">
                         <div className="p-6 bg-white rounded-xl shadow-sm border border-neutral-200">
                             <label className="block text-sm font-semibold text-neutral-700 mb-3">Recipe Image</label>
+                            {/* ImageUpload now expects onFileChange to pass the File object */}
                             <ImageUpload
-                                value={imageUrl}
-                                onChange={setImageUrl}
+                                onFileChange={(file) => setImageFile(file)}
                             />
                         </div>
 
                         <button
                             type="submit"
+                            disabled={isSubmitting}
                             className="w-full flex items-center justify-center gap-2 py-3 px-6
-                         bg-primary-600 text-white font-bold rounded-full
-                         hover:bg-primary-700 transition-colors text-lg"
+                          bg-primary-600 text-white font-bold rounded-full
+                          hover:bg-primary-700 transition-colors text-lg disabled:opacity-50"
                         >
                             <Send size={20}/>
-                            Submit Recipe
+                            {isSubmitting ? "Creating..." : "Submit Recipe"}
                         </button>
                     </div>
                 </div>

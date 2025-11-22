@@ -1,63 +1,110 @@
 // src/context/AuthContext.js
 
-import React, { createContext, useState, useContext, useEffect } from "react";
-import api from "../services/api"; // We'll create this service next
+import React, { createContext, useState, useEffect, useContext } from "react";
+import { supabase } from "../lib/supabase";
+import { toast } from "react-hot-toast";
 
-const AuthContext = createContext();
-
-export const useAuth = () => {
-  return useContext(AuthContext);
-};
+const AuthContext = createContext(null);
 
 export const AuthProvider = ({ children }) => {
-  const [user, setUser] = useState(null);
-  const [token, setToken] = useState(localStorage.getItem("token"));
-  const [loading, setLoading] = useState(true);
+    const [user, setUser] = useState(null);
+    const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    if (token) {
-      // If a token exists, we could validate it with the backend here
-      // For now, we'll assume it's valid and decode it to get user info
-      // In a real app, you'd fetch the user profile: api.get('/api/auth/me')
-      api.defaults.headers.common["Authorization"] = `Bearer ${token}`;
-      // For simplicity, we won't decode the user here, just mark as authenticated
-      setUser({ isAuthenticated: true });
-    }
-    setLoading(false);
-  }, [token]);
+    useEffect(() => {
+        // Check active session
+        const checkSession = async () => {
+            try {
+                const { data: { session } } = await supabase.auth.getSession();
+                setUser(session?.user || null);
+            } catch (error) {
+                console.error("Error checking session:", error);
+            } finally {
+                setLoading(false);
+            }
+        };
 
-  const login = async (email, password) => {
-    const response = await api.post("/api/auth/login", { email, password });
-    const { token } = response.data;
-    localStorage.setItem("token", token);
-    api.defaults.headers.common["Authorization"] = `Bearer ${token}`;
-    setToken(token);
-    setUser({ isAuthenticated: true });
-  };
+        checkSession();
 
-  const register = async (username, email, password) => {
-    await api.post("/api/auth/register", { username, email, password });
-  };
+        // Listen for auth changes
+        const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+            setUser(session?.user || null);
+            setLoading(false);
+        });
 
-  const logout = () => {
-    localStorage.removeItem("token");
-    delete api.defaults.headers.common["Authorization"];
-    setToken(null);
-    setUser(null);
-  };
+        return () => subscription.unsubscribe();
+    }, []);
 
-  const value = {
-    user,
-    token,
-    login,
-    register,
-    logout,
-    isAuthenticated: !!token,
-  };
+    const login = async (email, password) => {
+        try {
+            const { data, error } = await supabase.auth.signInWithPassword({
+                email,
+                password,
+            });
+            if (error) throw error;
+            return data;
+        } catch (error) {
+            console.error("Login error:", error);
+            throw error;
+        }
+    };
 
-  return (
-    <AuthContext.Provider value={value}>
-      {!loading && children}
-    </AuthContext.Provider>
-  );
+    const register = async (email, password, username) => {
+        try {
+            const { data, error } = await supabase.auth.signUp({
+                email,
+                password,
+                options: {
+                    data: {
+                        username,
+                    },
+                },
+            });
+            if (error) throw error;
+            return data;
+        } catch (error) {
+            console.error("Register error:", error);
+            throw error;
+        }
+    };
+
+    const loginWithGoogle = async () => {
+        try {
+            const { data, error } = await supabase.auth.signInWithOAuth({
+                provider: 'google',
+            });
+            if (error) throw error;
+            return data;
+        } catch (error) {
+            console.error("Google login error:", error);
+            throw error;
+        }
+    };
+
+    const logout = async () => {
+        try {
+            const { error } = await supabase.auth.signOut();
+            if (error) throw error;
+            setUser(null);
+            toast.success("Logged out successfully");
+        } catch (error) {
+            console.error("Logout error:", error);
+            toast.error("Failed to logout");
+        }
+    };
+
+    return (
+        <AuthContext.Provider value={{ 
+            user, 
+            isAuthenticated: !!user, 
+            loading, 
+            login, 
+            register, 
+            logout,
+            loginWithGoogle 
+        }}>
+            {children}
+        </AuthContext.Provider>
+    );
 };
+
+export const useAuth = () => useContext(AuthContext);

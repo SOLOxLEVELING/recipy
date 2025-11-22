@@ -1,8 +1,7 @@
 import React, { useState } from 'react';
-import axios from 'axios';
 import { Upload, X, Loader } from 'lucide-react';
 
-const ImageUpload = ({ value, onChange, className }) => {
+const ImageUpload = ({ value, onChange, onFileChange, className }) => {
     const [uploading, setUploading] = useState(false);
     const [preview, setPreview] = useState(value || "");
 
@@ -13,38 +12,26 @@ const ImageUpload = ({ value, onChange, className }) => {
         // Show local preview immediately
         const objectUrl = URL.createObjectURL(file);
         setPreview(objectUrl);
-        setUploading(true);
 
-        const formData = new FormData();
-        formData.append('image', file);
-
-        try {
-            const response = await axios.post('http://localhost:3001/api/upload', formData, {
-                headers: {
-                    'Content-Type': 'multipart/form-data',
-                },
-            });
-            
-            // Update parent with the Cloudinary URL
-            onChange(response.data.url);
-            setPreview(response.data.url); // Use the real URL now
-        } catch (error) {
-            console.error('Upload failed:', error);
-            alert('Failed to upload image. Please try again.');
-            setPreview(value); // Revert to original value on error
-        } finally {
-            setUploading(false);
+        // If onFileChange is provided, pass the file to parent (Serverless mode)
+        if (onFileChange) {
+            onFileChange(file);
+            return;
         }
+
+        // Legacy mode (if needed, or just remove)
+        // For now, we'll assume onFileChange is the primary method for the new flow
     };
 
     const handleRemove = () => {
-        onChange('');
+        if (onChange) onChange('');
+        if (onFileChange) onFileChange(null);
         setPreview('');
     };
 
     // Sync preview with value prop if it changes externally (e.g. after data fetch)
     React.useEffect(() => {
-        setPreview(value || "");
+        if (value) setPreview(value);
     }, [value]);
 
     return (

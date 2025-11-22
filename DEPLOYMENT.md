@@ -1,73 +1,83 @@
-# Recipy Deployment Guide 🚀
+# Recipy# Deployment Guide: Recipy (Serverless)
 
-This guide covers how to deploy the full Recipy stack:
-1.  **Database**: Neon (PostgreSQL)
-2.  **Backend**: Fly.io or Koyeb (Node.js/Express)
-3.  **Frontend**: Vercel (React/Vite)
+This guide explains how to deploy Recipy as a **Serverless Application** using **Vercel** (Frontend) and **Supabase** (Backend/Database).
 
----
+## Prerequisites
 
-## 1. Database Deployment (Neon)
-
-1.  **Sign Up**: Go to [Neon.tech](https://neon.tech) and sign up.
-2.  **Create Project**: Create a new project (e.g., `recipy-db`).
-3.  **Get Connection String**: Copy the "Connection String" (looks like `postgres://user:pass@ep-xyz.region.neon.tech/neondb...`).
-4.  **Run Schema**:
-    -   Go to the **SQL Editor** in the Neon dashboard.
-    -   Open the file `server/schema.sql` from this project.
-    -   Copy the entire content and paste it into the SQL Editor.
-    -   Click **Run**. This will create all your tables and seed initial data.
+1.  **GitHub Account**: To host your code.
+2.  **Vercel Account**: To deploy the frontend.
+3.  **Supabase Account**: To host the database and auth.
 
 ---
 
-## 2. Backend Deployment (Fly.io or Koyeb)
+## Part 1: Supabase Setup (Database & Auth)
 
-### Option A: Koyeb (Easiest for beginners)
-1.  **Sign Up**: Go to [Koyeb.com](https://koyeb.com).
-2.  **Create Service**:
-    -   Select **GitHub** as the source.
-    -   Choose your `recipy` repository.
-    -   **Builder**: Select "Node.js".
-    -   **Build Command**: `npm install` (ensure you are targeting the `server` directory).
-    -   **Run Command**: `npm start`.
-    -   **Work Directory**: Set this to `server` (Important! The backend is in a subdirectory).
-3.  **Environment Variables**: Add the following:
-    -   `PORT`: `8000` (or `3001`, Koyeb usually detects it, but 8000 is safe).
-    -   `DATABASE_URL`: Paste your Neon connection string.
-    -   `JWT_SECRET`: Generate a random string.
-    -   `CLOUDINARY_CLOUD_NAME`, `CLOUDINARY_API_KEY`, `CLOUDINARY_API_SECRET`: Your Cloudinary credentials.
-4.  **Deploy**: Click "Deploy". Wait for it to become healthy.
-5.  **Copy URL**: Get your backend URL (e.g., `https://recipy-backend.koyeb.app`).
+1.  **Create Project**:
+    *   Go to [Supabase Dashboard](https://supabase.com/dashboard).
+    *   Click **New Project**.
+    *   Enter a name (e.g., `recipy-portfolio`) and a strong database password.
+    *   Select a region close to you.
 
-### Option B: Fly.io (CLI based)
-1.  Install `flyctl`.
-2.  Navigate to `server/`: `cd server`.
-3.  Run `fly launch`.
-4.  Follow the prompts.
+2.  **Setup Database**:
+    *   Go to the **SQL Editor** (sidebar icon).
+    *   Click **New Query**.
+    *   Copy the content of `server/supabase_schema.sql` from this project.
+    *   Paste it into the query editor and click **Run**.
+    *   This creates all your tables (recipes, profiles, etc.) and sets up security policies.
+
+3.  **Setup Authentication**:
+    *   Go to **Authentication** -> **Providers**.
+    *   Enable **Google** (optional, requires Google Cloud Console setup) or just rely on **Email/Password** (enabled by default).
+    *   **Important**: Go to **Authentication** -> **URL Configuration**.
+    *   Set **Site URL** to your local URL for now (`http://localhost:5173`). You will update this to your Vercel URL later.
+
+4.  **Get Credentials**:
+    *   Go to **Project Settings** (gear icon) -> **API**.
+    *   Copy the **Project URL** and **anon / public** Key. You will need these for Vercel.
 
 ---
 
-## 3. Frontend Deployment (Vercel)
+## Part 2: Vercel Deployment (Frontend)
 
-1.  **Sign Up**: Go to [Vercel.com](https://vercel.com).
-2.  **Add New Project**: Import your `recipy` repository.
+1.  **Push to GitHub**:
+    *   Ensure your project is pushed to a GitHub repository.
+
+2.  **Import to Vercel**:
+    *   Go to [Vercel Dashboard](https://vercel.com/dashboard).
+    *   Click **Add New...** -> **Project**.
+    *   Import your `recipy` repository.
+
 3.  **Configure Project**:
-    -   **Framework Preset**: Vite.
-    -   **Root Directory**: `recipy` (or `./` if it's the root).
-    -   **Build Command**: `npm run build`.
-    -   **Output Directory**: `dist`.
+    *   **Framework Preset**: Vite (should be auto-detected).
+    *   **Root Directory**: `recipy` (if your project is in a subdirectory, otherwise leave root).
+    *   **Build Command**: `npm run build`.
+    *   **Output Directory**: `dist`.
+
 4.  **Environment Variables**:
-    -   `VITE_API_URL`: Set this to your **Backend URL** from Step 2 (e.g., `https://recipy-backend.koyeb.app/api`).
-        *Note: Ensure you add `/api` at the end if your frontend expects it, or configure the base URL accordingly.*
-5.  **Deploy**: Click "Deploy".
+    *   Expand the **Environment Variables** section.
+    *   Add the following variables (using the values from Supabase):
+        *   `VITE_SUPABASE_URL`: Your Supabase Project URL.
+        *   `VITE_SUPABASE_ANON_KEY`: Your Supabase Anon/Public Key.
+
+5.  **Deploy**:
+    *   Click **Deploy**.
+    *   Vercel will build your site. Once done, you'll get a live URL (e.g., `https://recipy-portfolio.vercel.app`).
 
 ---
 
-## 4. Final Checks
+## Part 3: Final Configuration
 
-1.  Open your Vercel URL.
-2.  Try to **Login** (use `anna@example.com` / password from seed or register a new user).
-3.  **Test Image Upload**: Create a recipe and upload an image to verify Cloudinary.
-4.  **Test Database**: Save a recipe and check if it persists.
+1.  **Update Supabase Redirects**:
+    *   Go back to **Supabase Dashboard** -> **Authentication** -> **URL Configuration**.
+    *   Add your new Vercel URL (e.g., `https://recipy-portfolio.vercel.app`) to **Redirect URLs**.
+    *   Update **Site URL** to your Vercel URL.
+
+2.  **Verify**:
+    *   Open your Vercel URL.
+    *   Try to **Sign Up** (creates a user in Supabase).
+    *   Try to **Create a Recipe** (saves to Supabase DB).
+    *   Try to **Upload an Image** (saves to Supabase Storage).
+
+**Congratulations! Your full-stack serverless app is live!** 🚀
 
 🎉 **Congratulations! Your Recipy app is live!**
