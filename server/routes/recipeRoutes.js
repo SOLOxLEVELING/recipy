@@ -6,10 +6,22 @@ const authMiddleware = require('../middleware/authMiddleware');
 // Public Routes
 router.get("/", async (req, res) => {
     try {
-        const recipes = await queries.getAllRecipes();
+        const { search, category } = req.query;
+        const recipes = await queries.getAllRecipes(search, category);
         res.json(recipes);
     } catch (error) {
+        console.error(error);
         res.status(500).json({ error: "Failed to fetch recipes" });
+    }
+});
+
+router.get("/categories", async (req, res) => {
+    try {
+        const categories = await queries.getCategories();
+        res.json(categories);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: "Failed to fetch categories" });
     }
 });
 

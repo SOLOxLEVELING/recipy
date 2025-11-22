@@ -15,7 +15,7 @@ const InstructionList = ({instructions}) => (
                         {(index + 1).toString().padStart(2, '0')}
           </span>
                     <p className="text-lg text-neutral-700 leading-relaxed pt-2">
-                        {step}
+                        {typeof step === 'object' ? step.description : step}
                     </p>
                 </li>
             ))}

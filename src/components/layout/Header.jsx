@@ -26,13 +26,21 @@ const Header = ({ isAuthenticated, logout }) => {
 
                 {/* Auth Buttons */}
                 {isAuthenticated ? (
-                    <button
-                        onClick={handleLogout}
-                        className="hidden md:flex items-center gap-2 py-2 px-4 text-sm text-neutral-600 hover:text-primary-600 font-semibold transition-colors"
-                    >
-                        <LogOut size={16} />
-                        <span>Logout</span>
-                    </button>
+                    <div className="hidden md:flex items-center gap-6">
+                        <Link 
+                            to="/profile" 
+                            className="text-sm font-semibold text-neutral-600 hover:text-primary-600 transition-colors"
+                        >
+                            My Profile
+                        </Link>
+                        <button
+                            onClick={handleLogout}
+                            className="flex items-center gap-2 py-2 px-4 text-sm text-neutral-600 hover:text-primary-600 font-semibold transition-colors"
+                        >
+                            <LogOut size={16} />
+                            <span>Logout</span>
+                        </button>
+                    </div>
                 ) : (
                     <div className="hidden md:flex items-center gap-4">
                         <Link

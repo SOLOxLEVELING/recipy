@@ -1,11 +1,19 @@
--- seed.sql
+-- schema.sql
+-- Consolidated schema for Recipy deployment (Neon/PostgreSQL)
 
--- Start with a clean slate (optional: deletes existing data)
-TRUNCATE TABLE users, recipes, ingredients, instructions, categories, recipe_categories, ratings RESTART IDENTITY CASCADE;
+-- 1. Clean up existing tables (optional, be careful in production!)
+DROP TABLE IF EXISTS saved_recipes CASCADE;
+DROP TABLE IF EXISTS ratings CASCADE;
+DROP TABLE IF EXISTS recipe_categories CASCADE;
+DROP TABLE IF EXISTS instructions CASCADE;
+DROP TABLE IF EXISTS ingredients CASCADE;
+DROP TABLE IF EXISTS recipes CASCADE;
+DROP TABLE IF EXISTS categories CASCADE;
+DROP TABLE IF EXISTS users CASCADE;
 
--- Insert Users
--- In a real app, password_hash would be a securely hashed password
-CREATE TABLE IF NOT EXISTS users (
+-- 2. Create Tables
+
+CREATE TABLE users (
     id SERIAL PRIMARY KEY,
     username VARCHAR(50) UNIQUE NOT NULL,
     display_name VARCHAR(50),
@@ -16,12 +24,12 @@ CREATE TABLE IF NOT EXISTS users (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE TABLE IF NOT EXISTS categories (
+CREATE TABLE categories (
     id SERIAL PRIMARY KEY,
     name VARCHAR(50) UNIQUE NOT NULL
 );
 
-CREATE TABLE IF NOT EXISTS recipes (
+CREATE TABLE recipes (
     id SERIAL PRIMARY KEY,
     title VARCHAR(255) NOT NULL,
     description TEXT,
@@ -33,7 +41,7 @@ CREATE TABLE IF NOT EXISTS recipes (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE TABLE IF NOT EXISTS ingredients (
+CREATE TABLE ingredients (
     id SERIAL PRIMARY KEY,
     recipe_id INTEGER REFERENCES recipes(id) ON DELETE CASCADE,
     name VARCHAR(255) NOT NULL,
@@ -41,20 +49,20 @@ CREATE TABLE IF NOT EXISTS ingredients (
     unit VARCHAR(100)
 );
 
-CREATE TABLE IF NOT EXISTS instructions (
+CREATE TABLE instructions (
     id SERIAL PRIMARY KEY,
     recipe_id INTEGER REFERENCES recipes(id) ON DELETE CASCADE,
     step_number INTEGER NOT NULL,
     description TEXT NOT NULL
 );
 
-CREATE TABLE IF NOT EXISTS recipe_categories (
+CREATE TABLE recipe_categories (
     recipe_id INTEGER REFERENCES recipes(id) ON DELETE CASCADE,
     category_id INTEGER REFERENCES categories(id) ON DELETE CASCADE,
     PRIMARY KEY (recipe_id, category_id)
 );
 
-CREATE TABLE IF NOT EXISTS ratings (
+CREATE TABLE ratings (
     id SERIAL PRIMARY KEY,
     recipe_id INTEGER REFERENCES recipes(id) ON DELETE CASCADE,
     user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
@@ -63,18 +71,21 @@ CREATE TABLE IF NOT EXISTS ratings (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE TABLE IF NOT EXISTS saved_recipes (
+CREATE TABLE saved_recipes (
     user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
     recipe_id INTEGER REFERENCES recipes(id) ON DELETE CASCADE,
     PRIMARY KEY (user_id, recipe_id),
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
-INSERT INTO users (username, display_name, email, password_hash, bio, avatar_url) VALUES
-('ChefAnna', 'Anna', 'anna@example.com', 'hashed_password_1', 'Passionate home cook loving Italian cuisine.', 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?ixlib=rb-4.0.3&auto=format&fit=crop&w=150&q=80'),
-('BudgetBytes', 'Beth', 'beth@example.com', 'hashed_password_2', 'Cooking on a budget without sacrificing flavor.', 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?ixlib=rb-4.0.3&auto=format&fit=crop&w=150&q=80');
+-- 3. Insert Initial Data (Seed)
 
--- Insert Categories
+-- Users
+INSERT INTO users (username, display_name, email, password_hash, bio, avatar_url) VALUES
+('ChefAnna', 'Anna', 'anna@example.com', '$2a$10$abcdefg...', 'Passionate home cook loving Italian cuisine.', 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?ixlib=rb-4.0.3&auto=format&fit=crop&w=150&q=80'),
+('BudgetBytes', 'Beth', 'beth@example.com', '$2a$10$abcdefg...', 'Cooking on a budget without sacrificing flavor.', 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?ixlib=rb-4.0.3&auto=format&fit=crop&w=150&q=80');
+
+-- Categories
 INSERT INTO categories (name) VALUES
 ('Italian'),
 ('Pasta'),
@@ -82,7 +93,7 @@ INSERT INTO categories (name) VALUES
 ('Indian'),
 ('Vegan');
 
--- Insert Recipe 1: Spaghetti Carbonara
+-- Recipe 1: Spaghetti Carbonara
 INSERT INTO recipes (title, description, prep_time_minutes, cook_time_minutes, servings, image_url, author_id) VALUES
 (
     'Classic Spaghetti Carbonara',
@@ -91,10 +102,9 @@ INSERT INTO recipes (title, description, prep_time_minutes, cook_time_minutes, s
     15,
     4,
     'https://placehold.co/600x400/f4a261/ffffff?text=Spaghetti+Carbonara',
-    1 -- Author is ChefAnna (id=1)
-) RETURNING id;
+    1
+);
 
--- Use the ID returned from the previous insert (which will be 1)
 -- Ingredients for Recipe 1
 INSERT INTO ingredients (recipe_id, name, quantity, unit) VALUES
 (1, 'Spaghetti', 400, 'grams'),
@@ -111,14 +121,13 @@ INSERT INTO instructions (recipe_id, step_number, description) VALUES
 (1, 4, 'Drain the pasta and immediately add it to the skillet with the pancetta. Toss quickly.'),
 (1, 5, 'Pour the egg mixture over the hot pasta and stir vigorously to create a creamy sauce. Do not return to heat.');
 
--- Link Recipe 1 to Categories
+-- Categories for Recipe 1
 INSERT INTO recipe_categories (recipe_id, category_id) VALUES
 (1, 1), -- Italian
 (1, 2), -- Pasta
 (1, 3); -- Main Course
 
-
--- Insert Recipe 2: Vegan Chickpea Curry
+-- Recipe 2: Vegan Chickpea Curry
 INSERT INTO recipes (title, description, prep_time_minutes, cook_time_minutes, servings, image_url, author_id) VALUES
 (
     '20-Minute Vegan Chickpea Curry',
@@ -127,10 +136,10 @@ INSERT INTO recipes (title, description, prep_time_minutes, cook_time_minutes, s
     20,
     4,
     'https://placehold.co/600x400/2a9d8f/ffffff?text=Vegan+Curry',
-    2 -- Author is BudgetBytes (id=2)
-) RETURNING id;
+    2
+);
 
--- Ingredients for Recipe 2 (its ID will be 2)
+-- Ingredients for Recipe 2
 INSERT INTO ingredients (recipe_id, name, quantity, unit) VALUES
 (2, 'Onion', 1, 'count'),
 (2, 'Garlic cloves', 2, 'count'),
@@ -146,12 +155,12 @@ INSERT INTO instructions (recipe_id, step_number, description) VALUES
 (2, 3, 'Add the chickpeas, coconut milk, and diced tomatoes to the pot. Stir to combine.'),
 (2, 4, 'Bring to a simmer and cook for 15-20 minutes, allowing the curry to thicken slightly. Serve hot with rice.');
 
--- Link Recipe 2 to Categories
+-- Categories for Recipe 2
 INSERT INTO recipe_categories (recipe_id, category_id) VALUES
 (2, 3), -- Main Course
 (2, 4), -- Indian
 (2, 5); -- Vegan
 
--- Add a Rating for Recipe 1
+-- Ratings
 INSERT INTO ratings (recipe_id, user_id, score, comment) VALUES
 (1, 2, 5, 'This was amazing! So easy to follow and tasted just like what I had in Rome.');

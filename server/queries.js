@@ -1,12 +1,37 @@
 // queries.js (Corrected)
 const db = require("./db");
 
-const getAllRecipes = async () => {
-  const { rows } = await db.query(`
-    SELECT r.id, r.title, r.image_url, 
+const getAllRecipes = async (searchTerm, category) => {
+  let query = `
+    SELECT DISTINCT r.id, r.title, r.image_url, r.prep_time_minutes, r.servings,
            (SELECT AVG(score) FROM ratings WHERE recipe_id = r.id) as average_rating
-    FROM recipes r;
-  `);
+    FROM recipes r
+    LEFT JOIN recipe_categories rc ON r.id = rc.recipe_id
+    LEFT JOIN categories c ON rc.category_id = c.id
+    WHERE 1=1
+  `;
+  
+  const params = [];
+  let paramIndex = 1;
+
+  if (searchTerm) {
+    query += ` AND r.title ILIKE $${paramIndex}`;
+    params.push(`%${searchTerm}%`);
+    paramIndex++;
+  }
+
+  if (category && category !== 'All') {
+    query += ` AND c.name = $${paramIndex}`;
+    params.push(category);
+    paramIndex++;
+  }
+
+  const { rows } = await db.query(query, params);
+  return rows;
+};
+
+const getCategories = async () => {
+  const { rows } = await db.query("SELECT * FROM categories ORDER BY name ASC");
   return rows;
 };
 
@@ -150,7 +175,7 @@ const findUserByEmail = async (email) => {
 
 const getRecipesByAuthor = async (authorId) => {
   const { rows } = await db.query(
-    `SELECT r.id, r.title, r.image_url, 
+    `SELECT r.id, r.title, r.image_url, r.prep_time_minutes, r.servings,
             (SELECT AVG(score) FROM ratings WHERE recipe_id = r.id) as average_rating
      FROM recipes r
      WHERE r.author_id = $1`,
@@ -239,6 +264,27 @@ const updateInstructions = async (recipeId, instructions) => {
   }
 };
 
+const getUserProfile = async (userId) => {
+  const { rows } = await db.query(
+    "SELECT id, username, display_name, email, bio, avatar_url, created_at FROM users WHERE id = $1",
+    [userId]
+  );
+  return rows[0];
+};
+
+const updateUserProfile = async (userId, { display_name, bio, avatar_url }) => {
+  const { rows } = await db.query(
+    `UPDATE users 
+     SET display_name = COALESCE($1, display_name), 
+         bio = COALESCE($2, bio), 
+         avatar_url = COALESCE($3, avatar_url)
+     WHERE id = $4
+     RETURNING id, username, display_name, email, bio, avatar_url`,
+    [display_name, bio, avatar_url, userId]
+  );
+  return rows[0];
+};
+
 module.exports = {
   getAllRecipes,
   getRecipeById,
@@ -252,4 +298,7 @@ module.exports = {
   updateRecipe,
   updateIngredients,
   updateInstructions,
+  getCategories,
+  getUserProfile,
+  updateUserProfile,
 };

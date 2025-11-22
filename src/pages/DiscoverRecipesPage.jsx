@@ -1,82 +1,116 @@
 import React, {useMemo, useState, useEffect} from "react";
+import { useSearchParams } from "react-router-dom";
 import RecipeCardGrid from "../components/recipes/RecipeCardGrid";
 import AdvancedFilterModal from "../components/recipes/AdvancedFilterModal.jsx";
-import {filterOptions, mockRecipes} from ".././data/mockData";
 import {Search, SlidersHorizontal} from "lucide-react";
 import {RecipeCardSkeleton} from "../components/ui/Skeleton";
-
-// Get the category list and add "All" to the beginning
-const categories = ["All", ...filterOptions.category];
-
-
-
-// ...
+import { fetchRecipes, fetchCategories } from "../services/api";
+import SEO from "../components/common/SEO";
 
 const DiscoverRecipesPage = () => {
+    const [searchParams, setSearchParams] = useSearchParams();
     const [isFilterOpen, setIsFilterOpen] = useState(false);
     const [activeFilters, setActiveFilters] = useState({});
-    const [searchTerm, setSearchTerm] = useState("");
-    const [isLoading, setIsLoading] = useState(true); // Simulated loading
+    
+    // State for data
+    const [recipes, setRecipes] = useState([]);
+    const [categories, setCategories] = useState(["All"]);
+    const [isLoading, setIsLoading] = useState(true);
 
+    // Read initial state from URL
+    const initialSearch = searchParams.get("search") || "";
+    const initialCategory = searchParams.get("category");
+    
+    const [searchTerm, setSearchTerm] = useState(initialSearch);
+    
+    // Initialize activeFilters from URL
     useEffect(() => {
-        // Simulate network request
-        const timer = setTimeout(() => setIsLoading(false), 1000);
-        return () => clearTimeout(timer);
+        const category = searchParams.get("category");
+        if (category) {
+            setActiveFilters(prev => ({ ...prev, category: [category] }));
+        } else {
+            setActiveFilters(prev => {
+                const { category, ...rest } = prev;
+                return rest;
+            });
+        }
+    }, [searchParams]);
+
+    // Fetch Categories on Mount
+    useEffect(() => {
+        const loadCategories = async () => {
+            try {
+                const response = await fetchCategories();
+                // Extract names from category objects
+                const categoryNames = ["All", ...response.data.map(c => c.name)];
+                setCategories(categoryNames);
+            } catch (error) {
+                console.error("Failed to load categories", error);
+            }
+        };
+        loadCategories();
     }, []);
 
-    // ... rest of the code ...
+    // Debounce Search Term & Sync ActiveFilters to URL
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            const params = {};
+            if (searchTerm) params.search = searchTerm;
+            
+            // Sync activeFilters to URL
+            // We only take the first category since backend supports one for now
+            const cat = activeFilters.category?.[0];
+            if (cat && cat !== "All") params.category = cat;
+            
+            setSearchParams(params);
+        }, 500);
 
-    // Get the currently selected category from state (defaults to "All")
-    const selectedCategory = activeFilters.category?.[0] || "All";
+        return () => clearTimeout(timer);
+    }, [searchTerm, activeFilters, setSearchParams]);
 
-    const recipes = mockRecipes;
+    // Fetch Recipes when URL params change
+    useEffect(() => {
+        const loadRecipes = async () => {
+            setIsLoading(true);
+            try {
+                const search = searchParams.get("search");
+                const category = searchParams.get("category");
+                
+                const response = await fetchRecipes({ search, category });
+                setRecipes(response.data);
+            } catch (error) {
+                console.error("Failed to load recipes", error);
+            } finally {
+                setIsLoading(false);
+            }
+        };
+
+        loadRecipes();
+    }, [searchParams]);
 
     const handleCategoryClick = (category) => {
-        setActiveFilters(prevFilters => {
+        setActiveFilters(prev => {
             if (category === "All") {
-                // If "All" is clicked, remove the category filter entirely
-                const {category, ...rest} = prevFilters;
+                const { category, ...rest } = prev;
                 return rest;
-            } else {
-                // Otherwise, set the category filter to *only* the clicked one
-                return {
-                    ...prevFilters,
-                    category: [category]
-                };
             }
+            return { ...prev, category: [category] };
         });
     };
 
-    const filteredRecipes = useMemo(() => {
-        // 1. Filter by Search Term
-        let recipesBySearch = recipes.filter((recipe) =>
-            recipe.name.toLowerCase().includes(searchTerm.toLowerCase())
-        );
-
-        // 2. Filter by Active Filters (including the category)
-        const filters = Object.entries(activeFilters);
-        if (filters.length === 0) {
-            return recipesBySearch;
-        }
-
-        return recipesBySearch.filter(recipe => {
-            return filters.every(([type, values]) => {
-                if (!values || values.length === 0) return true;
-                if (type === 'dietary') {
-                    return values.every(value => recipe.dietary.includes(value));
-                } else {
-                    // This logic now also handles our 'category' filter
-                    const key = type === 'title' ? 'name' : type;
-                    return values.includes(recipe[key]);
-                }
-            });
-        });
-    }, [recipes, activeFilters, searchTerm]);
-
+    // Derived state for UI
+    const selectedCategory = activeFilters.category?.[0] || "All";
     const filterCount = Object.values(activeFilters).reduce((acc, val) => acc + (val ? val.length : 0), 0);
+
+    const pageTitle = searchTerm 
+        ? `Search: ${searchTerm}` 
+        : selectedCategory !== "All" 
+            ? `${selectedCategory} Recipes` 
+            : "Discover Recipes";
 
     return (
         <div>
+            <SEO title={pageTitle} description="Find the perfect recipe for any occasion." />
             {/* --- Hero Section --- */}
             <div className="relative rounded-3xl overflow-hidden mb-12 bg-neutral-900 text-white">
                 <div className="absolute inset-0">
@@ -162,8 +196,12 @@ const DiscoverRecipesPage = () => {
                         <RecipeCardSkeleton key={i} />
                     ))}
                 </div>
+            ) : recipes.length > 0 ? (
+                <RecipeCardGrid recipes={recipes} />
             ) : (
-                <RecipeCardGrid recipes={filteredRecipes} />
+                <div className="text-center py-20">
+                    <p className="text-xl text-neutral-500">No recipes found matching your criteria.</p>
+                </div>
             )}
 
             {/* --- Render the Modal --- */}
@@ -172,6 +210,7 @@ const DiscoverRecipesPage = () => {
                 onClose={() => setIsFilterOpen(false)}
                 activeFilters={activeFilters}
                 setActiveFilters={setActiveFilters}
+                categories={categories}
             />
         </div>
     );

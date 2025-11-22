@@ -15,10 +15,14 @@ api.interceptors.request.use((config) => {
   return config;
 });
 
-export const fetchRecipes = () => api.get("/api/recipes");
+export const fetchRecipes = (params) => api.get("/api/recipes", { params });
+export const fetchCategories = () => api.get("/api/recipes/categories");
 export const fetchRecipeById = (id) => api.get(`/api/recipes/${id}`);
 export const postRecipe = (recipeData) => api.post("/api/recipes", recipeData);
 export const fetchSavedRecipes = () => api.get("/api/saved-recipes");
+export const fetchUserProfile = () => api.get("/api/auth/me");
+export const updateUserProfile = (data) => api.put("/api/auth/me", data);
+export const fetchMyRecipes = () => api.get("/api/recipes/my-recipes/all");
 
 // We no longer need specific login/register functions here as the AuthContext handles them.
 export default api;

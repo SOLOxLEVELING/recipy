@@ -4,6 +4,7 @@ import IngredientList from "../components/form/IngredientList"; // Corrected pat
 import InstructionStep from "../components/form/InstructionStep";
 import ImageUpload from "../components/common/ImageUpload";
 import {Plus, Send} from "lucide-react";
+import SEO from "../components/common/SEO";
 
 // A reusable styled input component for this form
 const FormInput = (props) => (
@@ -88,6 +89,7 @@ const CreateRecipePage = () => {
 
     return (
         <div className="max-w-6xl mx-auto">
+            <SEO title="Create New Recipe" description="Share your culinary masterpiece with the world." />
             <h2 className="text-3xl font-bold text-neutral-800 mb-6 font-serif">
                 Create Your Recipe
             </h2>

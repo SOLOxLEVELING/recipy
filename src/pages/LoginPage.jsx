@@ -3,6 +3,7 @@ import {useAuth} from "../context/AuthContext";
 import {ChefHat} from "lucide-react";
 import {Link, useNavigate} from "react-router-dom";
 import toast from "react-hot-toast";
+import SEO from "../components/common/SEO";
 
 // ...
 
@@ -41,6 +42,7 @@ const LoginPage = () => {
 
     return (
         <div className="max-w-md mx-auto mt-12 bg-white p-8 rounded-xl shadow-lg border border-neutral-200">
+            <SEO title="Login" description="Sign in to your Recipy account." />
             <div className="flex flex-col items-center mb-6">
                 <ChefHat size={40} className="text-primary-600 mb-3"/>
                 <h2 className="text-3xl font-bold text-center text-neutral-800">

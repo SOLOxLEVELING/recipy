@@ -6,17 +6,34 @@ import InstructionList from "../components/recipes/InstructionList";
 import RatingStars from "../components/reviews/RatingStars";
 import CommentThread from "../components/reviews/CommentThread";
 import SaveRecipeButton from "../components/recipes/SaveRecipeButton";
-import {mockRecipes} from "../data/mockData";
+import { fetchRecipeById } from "../services/api";
+import SEO from "../components/common/SEO";
+import { getOptimizedImageUrl } from "../utils/imageUtils";
 
 const RecipeDetailPage = () => {
     const { id } = useParams();
-    const navigate = useNavigate();
-    
-    // Convert id to number since mockData IDs are numbers
-    const recipeId = parseInt(id, 10);
-    const recipe = mockRecipes.find((r) => r.id === recipeId);
+    const [recipe, setRecipe] = useState(null);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
 
-    if (!recipe)
+    useEffect(() => {
+        const loadRecipe = async () => {
+            try {
+                const response = await fetchRecipeById(id);
+                setRecipe(response.data);
+            } catch (err) {
+                console.error("Failed to fetch recipe", err);
+                setError("Recipe not found");
+            } finally {
+                setLoading(false);
+            }
+        };
+        loadRecipe();
+    }, [id]);
+
+    if (loading) return <div className="text-center py-20">Loading...</div>;
+
+    if (error || !recipe)
         return (
             <div className="text-center py-20">
                 <h2 className="text-2xl font-bold text-neutral-700">Recipe not found</h2>
@@ -50,6 +67,11 @@ const RecipeDetailContent = ({recipe}) => {
 
     return (
         <div className="max-w-6xl mx-auto bg-white p-4 sm:p-8 rounded-xl shadow-lg">
+            <SEO 
+                title={recipe.title || recipe.name} 
+                description={recipe.description}
+                image={getOptimizedImageUrl(recipe.image_url || recipe.image)}
+            />
             <header className="mb-8">
                 <button
                     onClick={() => navigate(-1)}
@@ -59,14 +81,14 @@ const RecipeDetailContent = ({recipe}) => {
                     Back
                 </button>
                 <img
-                    src={recipe.image}
-                    alt={recipe.name}
+                    src={getOptimizedImageUrl(recipe.image_url || recipe.image)}
+                    alt={recipe.title || recipe.name}
                     className="w-full h-64 sm:h-96 object-cover rounded-lg mb-6 shadow-md"
                 />
                 <div className="flex justify-between items-start flex-wrap gap-4">
                     <div>
                         <h1 className="text-4xl sm:text-5xl font-bold text-neutral-900 font-serif">
-                            {recipe.name}
+                            {recipe.title || recipe.name}
                         </h1>
                         <p className="text-lg text-neutral-600 mt-1">
                             By {recipe.author || "Recipe Share"}
@@ -97,11 +119,7 @@ const RecipeDetailContent = ({recipe}) => {
             <main className="grid grid-cols-1 lg:grid-cols-3 lg:gap-12">
                 <div className="lg:col-span-1 mb-8 lg:mb-0">
                     <IngredientChecklist
-                        ingredients={
-                            Array.isArray(recipe.ingredients)
-                                ? recipe.ingredients.map((ing) => ({name: ing}))
-                                : []
-                        }
+                        ingredients={recipe.ingredients || []}
                         baseServings={recipe.servings}
                     />
                 </div>

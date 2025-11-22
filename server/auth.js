@@ -5,8 +5,32 @@ require("dotenv").config();
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const queries = require("./queries");
+const authMiddleware = require("./middleware/authMiddleware");
 
 const router = express.Router();
+
+// --- GET CURRENT USER PROFILE ---
+router.get("/me", authMiddleware, async (req, res) => {
+  try {
+    const user = await queries.getUserProfile(req.user.id);
+    if (!user) return res.status(404).json({ error: "User not found" });
+    res.json(user);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Server error" });
+  }
+});
+
+// --- UPDATE CURRENT USER PROFILE ---
+router.put("/me", authMiddleware, async (req, res) => {
+  try {
+    const updatedUser = await queries.updateUserProfile(req.user.id, req.body);
+    res.json(updatedUser);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Server error" });
+  }
+});
 
 // --- REGISTRATION ROUTE ---
 router.post("/register", async (req, res) => {

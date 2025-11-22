@@ -1,12 +1,13 @@
 import React, {useEffect} from "react";
 import {SlidersHorizontal, Trash2, X} from "lucide-react";
-import {filterOptions} from "../../data/mockData.js"; // Assuming this path is correct
+import {filterOptions} from "../../data/constants.js";
 
 const AdvancedFilterModal = ({
                                  isOpen,
                                  onClose,
                                  activeFilters,
                                  setActiveFilters,
+                                 categories = [], // Default to empty array
                              }) => {
     // Effect to prevent body scroll when modal is open
     useEffect(() => {
@@ -78,7 +79,45 @@ const AdvancedFilterModal = ({
 
                 {/* --- Filter Sections (Scrollable) --- */}
                 <div className="flex-grow overflow-y-auto py-6 space-y-6">
-                    {Object.entries(filterOptions).map(([type, options]) => (
+                    {/* Categories Section */}
+                    <div>
+                        <h4 className="font-semibold text-neutral-800 capitalize mb-3 text-lg">
+                            Category
+                        </h4>
+                        <div className="flex flex-wrap gap-3">
+                            {categories.map((option) => {
+                                if (option === "All") return null; // Skip "All" in modal
+                                const isChecked = (activeFilters.category || []).includes(option);
+                                return (
+                                    <label
+                                        key={option}
+                                        className={`
+                        flex items-center justify-center px-4 py-2 rounded-full cursor-pointer
+                        font-semibold text-sm transition-colors border
+                        ${
+                                            isChecked
+                                                ? "bg-primary-600 border-primary-600 text-white"
+                                                : "bg-white border-neutral-300 text-neutral-700 hover:bg-neutral-50"
+                                        }
+                      `}
+                                    >
+                                        <input
+                                            type="checkbox"
+                                            checked={isChecked}
+                                            onChange={() => handleFilterChange("category", option)}
+                                            className="sr-only"
+                                        />
+                                        <span>{option}</span>
+                                    </label>
+                                );
+                            })}
+                        </div>
+                    </div>
+
+                    {/* Other Filters (Cuisine, Dietary) - Still from mockData for now, or could be dynamic later */}
+                    {Object.entries(filterOptions).map(([type, options]) => {
+                        if (type === 'category') return null; // We handled category above
+                        return (
                         <div key={type}>
                             <h4 className="font-semibold text-neutral-800 capitalize mb-3 text-lg">
                                 {type}
@@ -111,7 +150,7 @@ const AdvancedFilterModal = ({
                                 })}
                             </div>
                         </div>
-                    ))}
+                    )})}
                 </div>
 
                 {/* --- Footer / Actions --- */}

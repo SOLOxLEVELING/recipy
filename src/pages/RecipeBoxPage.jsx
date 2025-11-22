@@ -1,16 +1,12 @@
-import React, {useState} from "react";
-// import { fetchSavedRecipes } from "../services/api"; // No longer using API
-import {mockRecipes} from "../data/mockData"; // <-- IMPORT MOCK DATA
+import React, {useState, useEffect} from "react";
+import { fetchSavedRecipes } from "../services/api";
 import RecipeCardGrid from "../components/recipes/RecipeCardGrid";
+import SEO from "../components/common/SEO";
 
 const RecipeBoxPage = ({onSelectRecipe}) => {
-    // --- USE MOCK DATA INSTEAD OF FETCHING ---
-    // We'll just show the first 3 mock recipes as "saved"
-    const [savedRecipes, setSavedRecipes] = useState(mockRecipes.slice(0, 3));
-    // const [isLoading, setIsLoading] = useState(true); // No longer needed
+    const [savedRecipes, setSavedRecipes] = useState([]);
+    const [isLoading, setIsLoading] = useState(true);
 
-    /*
-    // --- API call is no longer needed ---
     useEffect(() => {
       const getRecipes = async () => {
         try {
@@ -26,12 +22,12 @@ const RecipeBoxPage = ({onSelectRecipe}) => {
     }, []);
 
     if (isLoading) {
-      return <p className="text-center">Loading your recipe box...</p>;
+      return <p className="text-center py-12">Loading your recipe box...</p>;
     }
-    */
 
     return (
         <div className="max-w-6xl mx-auto">
+            <SEO title="My Recipe Box" description="View your saved favorite recipes." />
             <h2 className="text-3xl font-bold text-gray-800 mb-6 font-serif">My Recipe Box</h2>
             {savedRecipes.length > 0 ? (
                 <RecipeCardGrid

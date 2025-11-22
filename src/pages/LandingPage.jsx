@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { Search, ArrowRight, ChefHat, Heart } from "lucide-react";
 import { Link } from "react-router-dom";
+import SEO from "../components/common/SEO";
 
 // High-quality food images for the slider
 const sliderImages = [
@@ -24,6 +25,10 @@ const LandingPage = () => {
 
   return (
     <div className="min-h-screen bg-secondary-50 font-sans text-neutral-800">
+      <SEO 
+        title="Home" 
+        description="Join a community where flavors meet creativity. Discover, share, and savor the art of home cooking."
+      />
       {/* --- Hero Section with Slider --- */}
       <section className="relative h-screen min-h-[600px] flex items-center overflow-hidden">
         {/* Background Slider */}
