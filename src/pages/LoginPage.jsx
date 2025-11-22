@@ -25,6 +25,10 @@ const LoginPage = () => {
     const location = useLocation();
     const from = location.state?.from?.pathname || "/discover";
 
+    const handleChange = (e) => {
+        setFormData({...formData, [e.target.name]: e.target.value});
+    };
+
     const handleSubmit = async (e) => {
         e.preventDefault();
         setError("");
