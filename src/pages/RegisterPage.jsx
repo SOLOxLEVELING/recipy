@@ -1,6 +1,6 @@
 import React, {useState} from "react";
 import {useAuth} from "../context/AuthContext";
-import {UserPlus} from "lucide-react";
+import {UserPlus, ChefHat} from "lucide-react";
 import {Link, useNavigate} from "react-router-dom";
 import toast from "react-hot-toast";
 import SEO from "../components/common/SEO";
