@@ -30,35 +30,42 @@ const MyRecipesPage = () => {
 
   const handleDelete = (id) => {
     toast.custom((t) => (
-      <div className={`${t.visible ? 'animate-enter' : 'animate-leave'} max-w-md w-full bg-white shadow-lg rounded-lg pointer-events-auto flex ring-1 ring-black ring-opacity-5`}>
-        <div className="flex-1 w-0 p-4">
-          <div className="flex items-start">
-            <div className="ml-3 flex-1">
-              <p className="text-sm font-medium text-gray-900">
+      <div
+        className={`${
+          t.visible ? 'animate-enter' : 'animate-leave'
+        } max-w-sm w-full bg-white shadow-xl rounded-2xl pointer-events-auto border border-neutral-100 overflow-hidden`}
+      >
+        <div className="p-5">
+          <div className="flex items-start gap-4">
+            <div className="flex-shrink-0 bg-red-50 p-2 rounded-full">
+              <Trash2 size={20} className="text-red-500" />
+            </div>
+            <div className="flex-1">
+              <h3 className="text-sm font-bold text-neutral-900 font-serif">
                 Delete Recipe?
-              </p>
-              <p className="mt-1 text-sm text-gray-500">
-                Are you sure you want to delete this recipe? This action cannot be undone.
+              </h3>
+              <p className="mt-1 text-sm text-neutral-500">
+                This action cannot be undone.
               </p>
             </div>
           </div>
-        </div>
-        <div className="flex border-l border-gray-200">
-          <button
-            onClick={() => toast.dismiss(t.id)}
-            className="w-full border border-transparent rounded-none rounded-r-lg p-4 flex items-center justify-center text-sm font-medium text-neutral-600 hover:text-neutral-500 focus:outline-none"
-          >
-            Cancel
-          </button>
-          <button
-            onClick={() => {
-              toast.dismiss(t.id);
-              confirmDelete(id);
-            }}
-            className="w-full border border-transparent rounded-none p-4 flex items-center justify-center text-sm font-medium text-red-600 hover:text-red-500 focus:outline-none border-l border-gray-200"
-          >
-            Delete
-          </button>
+          <div className="mt-4 flex gap-3">
+            <button
+              onClick={() => toast.dismiss(t.id)}
+              className="flex-1 px-4 py-2 bg-neutral-50 text-neutral-700 text-sm font-semibold rounded-xl hover:bg-neutral-100 transition-colors"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={() => {
+                toast.dismiss(t.id);
+                confirmDelete(id);
+              }}
+              className="flex-1 px-4 py-2 bg-red-500 text-white text-sm font-bold rounded-xl hover:bg-red-600 transition-colors shadow-sm shadow-red-200"
+            >
+              Delete
+            </button>
+          </div>
         </div>
       </div>
     ), { duration: 5000 });
