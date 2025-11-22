@@ -10,7 +10,7 @@ export const useRecipeBox = () => {
 
 export const RecipeBoxProvider = ({ children }) => {
   const [savedRecipes, setSavedRecipes] = useState([]);
-  const { token, user } = useAuth(); // Get user/token
+  const { user } = useAuth(); // Get user
 
   // Fetch saved recipes when user is logged in
   useEffect(() => {

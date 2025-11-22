@@ -7,7 +7,7 @@ export const fetchRecipes = async ({ search, category }) => {
         .from('recipes')
         .select(`
             *,
-            author:profiles(username),
+            author:profiles!recipes_author_id_fkey(username),
             ratings(score),
             recipe_categories!inner(
                 category:categories(name)
@@ -47,12 +47,12 @@ export const fetchRecipeById = async (id) => {
         .from('recipes')
         .select(`
             *,
-            author:profiles(username),
+            author:profiles!recipes_author_id_fkey(username),
             ingredients(*),
             instructions(*),
             ratings(
                 *,
-                user:profiles(username)
+                user:profiles!ratings_user_id_fkey(username)
             )
         `)
         .eq('id', id)

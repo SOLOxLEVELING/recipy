@@ -25,13 +25,33 @@ This guide explains how to deploy Recipy as a **Serverless Application** using *
     *   Paste it into the query editor and click **Run**.
     *   This creates all your tables (recipes, profiles, etc.) and sets up security policies.
 
-3.  **Setup Authentication**:
+3.  **Setup Storage (Images)**:
+    *   Go to **Storage** (folder icon in sidebar).
+    *   Click **New Bucket**.
+    *   Name it `recipe-images`.
+    *   Toggle **Public bucket** to ON.
+    *   Click **Save**.
+    *   **Important**: You need to set policies to allow uploads.
+        *   Click on the `recipe-images` bucket.
+        *   Click **Configuration** -> **Policies**.
+        *   Click **New Policy** -> **For full customization**.
+        *   Name: "Allow Public Read".
+        *   Allowed operations: Select **SELECT**.
+        *   Target roles: Select **anon** and **authenticated**.
+        *   Click **Review** -> **Save**.
+        *   Click **New Policy** -> **For full customization**.
+        *   Name: "Allow Authenticated Uploads".
+        *   Allowed operations: Select **INSERT**, **UPDATE**, **DELETE**.
+        *   Target roles: Select **authenticated**.
+        *   Click **Review** -> **Save**.
+
+4.  **Setup Authentication**:
     *   Go to **Authentication** -> **Providers**.
     *   Enable **Google** (optional, requires Google Cloud Console setup) or just rely on **Email/Password** (enabled by default).
     *   **Important**: Go to **Authentication** -> **URL Configuration**.
     *   Set **Site URL** to your local URL for now (`http://localhost:5173`). You will update this to your Vercel URL later.
 
-4.  **Get Credentials**:
+5.  **Get Credentials**:
     *   Go to **Project Settings** (gear icon) -> **API**.
     *   Copy the **Project URL** and **anon / public** Key. You will need these for Vercel.
 
