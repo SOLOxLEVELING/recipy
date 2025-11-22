@@ -3,16 +3,13 @@ import { supabase } from "../lib/supabase";
 // --- Recipes ---
 
 export const fetchRecipes = async ({ search, category }) => {
-    // Determine if we need strict filtering for categories
-    const isCategoryFilter = category && category !== 'All';
-    
     let query = supabase
         .from('recipes')
         .select(`
             *,
             author:profiles!recipes_author_id_fkey(username),
             ratings(score),
-            recipe_categories${isCategoryFilter ? '!inner' : ''}(
+            recipe_categories(
                 category:categories(name)
             )
         `);
@@ -21,8 +18,38 @@ export const fetchRecipes = async ({ search, category }) => {
         query = query.ilike('title', `%${search}%`);
     }
 
-    if (isCategoryFilter) {
-        query = query.eq('recipe_categories.category.name', category);
+    // Strict Category Filtering
+    if (category && category !== 'All') {
+        // 1. Get Category ID first (more reliable than deep filtering)
+        const { data: catData } = await supabase
+            .from('categories')
+            .select('id')
+            .eq('name', category)
+            .single();
+            
+        if (catData) {
+            // 2. Filter recipes that have this category_id
+            // We use !inner on the join to filter the parent rows
+            query = supabase
+                .from('recipes')
+                .select(`
+                    *,
+                    author:profiles!recipes_author_id_fkey(username),
+                    ratings(score),
+                    recipe_categories!inner(
+                        category_id
+                    )
+                `)
+                .eq('recipe_categories.category_id', catData.id);
+                
+            // Re-apply search if needed (since we reset query)
+            if (search) {
+                query = query.ilike('title', `%${search}%`);
+            }
+        } else {
+            // Category not found, return empty
+            return { data: [] };
+        }
     }
 
     const { data, error } = await query;

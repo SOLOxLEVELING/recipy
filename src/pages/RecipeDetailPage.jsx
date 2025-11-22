@@ -91,7 +91,7 @@ const RecipeDetailContent = ({recipe}) => {
                             {recipe.title || recipe.name}
                         </h1>
                         <p className="text-lg text-neutral-600 mt-1">
-                            By {recipe.author?.username || recipe.author || "Recipe Share"}
+                            By {recipe.author?.username || "Recipe Share"}
                         </p>
                         <div className="flex items-center mt-3 gap-2 text-neutral-500">
                             <RatingStars initialRating={averageRating}/>
