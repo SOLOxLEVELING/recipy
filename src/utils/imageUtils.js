@@ -25,5 +25,12 @@ export const getOptimizedImageUrl = (url) => {
         return url.replace(/&w=\d+/, "&w=800").replace(/\?w=\d+/, "?w=800");
     }
 
+    // Check if it's a Supabase URL
+    if (url.includes("supabase.co/storage")) {
+        // Supabase Storage URLs are already optimized/served directly
+        // We could add transformations if we had a CDN, but for now just return it
+        return url;
+    }
+
     return url;
 };
