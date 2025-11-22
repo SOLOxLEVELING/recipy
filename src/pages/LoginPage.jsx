@@ -17,7 +17,8 @@ const FormInput = (props) => (
 
 const LoginPage = () => {
     const [formData, setFormData] = useState({email: "", password: ""});
-    // const [error, setError] = useState(""); // Removed local error state
+    const [error, setError] = useState("");
+    const [isLoading, setIsLoading] = useState(false);
     const {login} = useAuth();
     const navigate = useNavigate();
 

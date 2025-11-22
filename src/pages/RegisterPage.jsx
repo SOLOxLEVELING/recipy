@@ -21,7 +21,8 @@ const RegisterPage = () => {
         email: "",
         password: "",
     });
-    // const [error, setError] = useState("");
+    const [error, setError] = useState("");
+    const [isLoading, setIsLoading] = useState(false);
     const {register} = useAuth();
     const navigate = useNavigate();
 

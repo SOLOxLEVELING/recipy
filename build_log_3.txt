@@ -1,0 +1,28 @@
+
+> recipy@0.0.0 build
+> vite build
+
+[36mvite v7.0.5 [32mbuilding for production...[36m[39m
+transforming...
+[32m✓[39m 1778 modules transformed.
+[31m✗[39m Build failed in 3.33s
+[31merror during build:
+[31msrc/pages/EditRecipePage.jsx (2:26): "updateRecipe" is not exported by "src/services/api.js", imported by "src/pages/EditRecipePage.jsx".[31m
+file: [36mC:/Users/adnan/Downloads/Developer/Developer/Portfolio/Portfolio/recipy/src/pages/EditRecipePage.jsx:2:26[31m
+[33m
+1: import React, { useState, useEffect } from "react";
+2: import { fetchRecipeById, updateRecipe } from "../services/api";
+                             ^
+3: import { useAuth } from "../context/AuthContext";
+4: import { Save, ArrowLeft, Plus, Trash2 } from "lucide-react";
+[31m
+    at getRollupError (file:///C:/Users/adnan/Downloads/Developer/Developer/Portfolio/Portfolio/recipy/node_modules/rollup/dist/es/shared/parseAst.js:401:41)
+    at error (file:///C:/Users/adnan/Downloads/Developer/Developer/Portfolio/Portfolio/recipy/node_modules/rollup/dist/es/shared/parseAst.js:397:42)
+    at Module.error (file:///C:/Users/adnan/Downloads/Developer/Developer/Portfolio/Portfolio/recipy/node_modules/rollup/dist/es/shared/node-entry.js:16830:16)
+    at Module.traceVariable (file:///C:/Users/adnan/Downloads/Developer/Developer/Portfolio/Portfolio/recipy/node_modules/rollup/dist/es/shared/node-entry.js:17279:29)
+    at ModuleScope.findVariable (file:///C:/Users/adnan/Downloads/Developer/Developer/Portfolio/Portfolio/recipy/node_modules/rollup/dist/es/shared/node-entry.js:14925:39)
+    at ReturnValueScope.findVariable (file:///C:/Users/adnan/Downloads/Developer/Developer/Portfolio/Portfolio/recipy/node_modules/rollup/dist/es/shared/node-entry.js:5620:38)
+    at FunctionBodyScope.findVariable (file:///C:/Users/adnan/Downloads/Developer/Developer/Portfolio/Portfolio/recipy/node_modules/rollup/dist/es/shared/node-entry.js:5620:38)
+    at ReturnValueScope.findVariable (file:///C:/Users/adnan/Downloads/Developer/Developer/Portfolio/Portfolio/recipy/node_modules/rollup/dist/es/shared/node-entry.js:5620:38)
+    at FunctionBodyScope.findVariable (file:///C:/Users/adnan/Downloads/Developer/Developer/Portfolio/Portfolio/recipy/node_modules/rollup/dist/es/shared/node-entry.js:5620:38)
+    at BlockScope.findVariable (file:///C:/Users/adnan/Downloads/Developer/Developer/Portfolio/Portfolio/recipy/node_modules/rollup/dist/es/shared/node-entry.js:5620:38)[39m

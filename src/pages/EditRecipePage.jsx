@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import axios from "axios";
+import { fetchRecipeById, updateRecipe } from "../services/api";
 import { useAuth } from "../context/AuthContext";
 import { Save, ArrowLeft, Plus, Trash2 } from "lucide-react";
 import { useParams, useNavigate } from "react-router-dom";
@@ -23,22 +23,21 @@ const EditRecipePage = () => {
   });
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const { token } = useAuth();
+  const { user } = useAuth();
 
   useEffect(() => {
-    const fetchRecipe = async () => {
+    const loadRecipe = async () => {
       try {
-        const response = await axios.get(
-          `http://localhost:3001/api/recipes/${recipeId}`
-        );
+        const response = await fetchRecipeById(recipeId);
         setFormData(response.data);
       } catch (error) {
         console.error("Failed to fetch recipe", error);
+        toast.error("Failed to load recipe");
       } finally {
         setLoading(false);
       }
     };
-    fetchRecipe();
+    loadRecipe();
   }, [recipeId]);
 
   const handleChange = (e) => {
@@ -99,13 +98,7 @@ const handleSubmit = async (e) => {
     setSaving(true);
     const loadingToast = toast.loading("Saving changes...");
     try {
-      await axios.put(
-        `http://localhost:3001/api/recipes/${recipeId}`,
-        formData,
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
+      await updateRecipe(recipeId, formData);
       toast.success("Recipe updated successfully!", { id: loadingToast });
       navigate("/my-recipes");
     } catch (error) {

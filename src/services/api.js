@@ -109,6 +109,58 @@ export const postRecipe = async (recipeData) => {
     return { data: recipe };
 };
 
+export const updateRecipe = async (id, recipeData) => {
+    const {
+        title, description, prep_time_minutes, cook_time_minutes, servings, image_url,
+        ingredients, instructions
+    } = recipeData;
+
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) throw new Error("User not authenticated");
+
+    // 1. Update Recipe
+    const { data: recipe, error: recipeError } = await supabase
+        .from('recipes')
+        .update({
+            title, description, prep_time_minutes, cook_time_minutes, servings, image_url
+        })
+        .eq('id', id)
+        .eq('author_id', user.id) // Security check
+        .select()
+        .single();
+
+    if (recipeError) throw recipeError;
+
+    // 2. Replace Ingredients (Delete all, then insert new)
+    if (ingredients) {
+        await supabase.from('ingredients').delete().eq('recipe_id', id);
+        if (ingredients.length > 0) {
+            const ingredientsData = ingredients.map(ing => ({
+                recipe_id: id,
+                name: ing.name,
+                quantity: ing.quantity,
+                unit: ing.unit
+            }));
+            await supabase.from('ingredients').insert(ingredientsData);
+        }
+    }
+
+    // 3. Replace Instructions (Delete all, then insert new)
+    if (instructions) {
+        await supabase.from('instructions').delete().eq('recipe_id', id);
+        if (instructions.length > 0) {
+            const instructionsData = instructions.map((inst, index) => ({
+                recipe_id: id,
+                step_number: index + 1, // Ensure sequential step numbers
+                description: inst.description
+            }));
+            await supabase.from('instructions').insert(instructionsData);
+        }
+    }
+
+    return { data: recipe };
+};
+
 // --- User & Profile ---
 
 export const fetchUserProfile = async () => {

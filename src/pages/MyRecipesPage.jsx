@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import axios from "axios";
+import { fetchMyRecipes } from "../services/api";
 import { useAuth } from "../context/AuthContext";
 import { Edit, Trash2, Plus, Clock, ChefHat } from "lucide-react";
 import { Link } from "react-router-dom";
@@ -8,18 +8,13 @@ import Skeleton, { RecipeCardSkeleton } from "../components/ui/Skeleton";
 const MyRecipesPage = () => {
   const [recipes, setRecipes] = useState([]);
   const [loading, setLoading] = useState(true);
-  const { token } = useAuth();
+  const { user } = useAuth();
 
   useEffect(() => {
-    const fetchMyRecipes = async () => {
+    const loadRecipes = async () => {
       try {
-        const response = await axios.get(
-          "http://localhost:3001/api/recipes/my-recipes/all",
-          {
-            headers: { Authorization: `Bearer ${token}` },
-          }
-        );
-        setRecipes(response.data);
+        const response = await fetchMyRecipes();
+        setRecipes(response.data || []);
       } catch (error) {
         console.error("Failed to fetch my recipes", error);
       } finally {
@@ -27,10 +22,10 @@ const MyRecipesPage = () => {
       }
     };
 
-    if (token) {
-      fetchMyRecipes();
+    if (user) {
+      loadRecipes();
     }
-  }, [token]);
+  }, [user]);
 
   if (loading) {
     return (
